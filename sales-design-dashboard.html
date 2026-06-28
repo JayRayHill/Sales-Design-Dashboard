@@ -3,26 +3,56 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sales Design Pipeline Dashboard</title>
+<title>Sales Design Pipeline Dashboard · UNIQ Supply</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<!-- Web fallbacks for the UNIQ Supply brand faces (Gelica → Fraunces, Avenir Next → Nunito Sans) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --accent: #A64E25;
-    --accent-soft: rgba(166, 78, 37, 0.12);
-    --bg: #f6f6f4;
+    /* ---- UNIQ Supply brand palette ---- */
+    --green-darkest: #093D26;
+    --green:         #0C5F3F;   /* Romaine primary — lead / structural */
+    --green-mid:     #41A373;
+    --green-light:   #89CCA4;
+    --orange-darkest:#D7532F;
+    --orange:        #EC6C27;   /* Orange primary — lead / velocity accent */
+    --orange-mid:    #F2A068;
+    --orange-light:  #FBBD92;
+    --blue:          #93D3E4;   /* Slushy accent */
+    --pink:          #F59BB9;   /* Sprinkle accent */
+    --sales-red:     #FA3838;   /* urgency / errors only */
+
+    /* neutrals */
+    --cream-deep:    #EEDAC8;
+    --cream:         #F3E5D9;
+    --cream-soft:    #FBF4EE;
+    --ink:           #231F20;   /* near-black text */
+    --gray-mid:      #ADADAD;
+    --gray-light:    #E3E3E3;
+
+    /* semantic roles */
+    --primary: var(--green);          /* buttons, headings, structure */
+    --primary-dark: var(--green-darkest);
+    --accent: var(--orange);          /* trend line, key metric highlight */
+    --accent-soft: rgba(236, 108, 39, 0.12);
+    --bg: var(--cream-soft);
     --card: #ffffff;
-    --ink: #1f2421;
-    --muted: #6b7280;
-    --line: #e6e6e2;
-    --good: #2f7d4f;
-    --bad: #b3402a;
+    --muted: #7c736e;                 /* warm muted gray */
+    --line: #ece2d8;                  /* warm hairline */
+    --good: var(--green);
+    --bad: var(--sales-red);
     --radius: 12px;
-    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow: 0 1px 3px rgba(35,31,32,0.06), 0 1px 2px rgba(35,31,32,0.04);
+
+    --font-heading: "Gelica", "Fraunces", Georgia, "Times New Roman", serif;
+    --font-body: "Avenir Next", "Nunito Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: var(--font-body);
     background: var(--bg);
     color: var(--ink);
     -webkit-font-smoothing: antialiased;
@@ -38,8 +68,8 @@
     gap: 16px;
     margin-bottom: 8px;
   }
-  .title h1 { font-size: 22px; margin: 0; font-weight: 650; letter-spacing: -0.01em; }
-  .title p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+  .title h1 { font-family: var(--font-heading); font-size: 26px; margin: 0; font-weight: 600; letter-spacing: -0.01em; color: var(--primary); }
+  .title p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
 
   /* Controls */
   .controls {
@@ -66,21 +96,21 @@
     color: var(--ink);
     min-width: 150px;
   }
-  .field input:focus, .field select:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+  .field input:focus, .field select:focus { outline: 2px solid rgba(12,95,63,0.18); border-color: var(--primary); }
   button.btn {
     font: inherit;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     padding: 9px 16px;
     border-radius: 8px;
-    border: 1px solid var(--accent);
-    background: var(--accent);
+    border: 1px solid var(--primary);
+    background: var(--primary);
     color: #fff;
     cursor: pointer;
     transition: opacity .15s ease;
   }
   button.btn:hover { opacity: .9; }
-  button.btn.ghost { background: #fff; color: var(--accent); }
+  button.btn.ghost { background: #fff; color: var(--primary); }
 
   /* Status banner */
   .banner {
@@ -93,10 +123,10 @@
     display: none;
   }
   .banner.show { display: block; }
-  .banner.warn { background: #fff8f3; border-color: #f0d3c2; color: #8a4225; }
-  .banner.err  { background: #fdf1ef; border-color: #f0c8c2; color: #9b2f1e; }
-  .banner.info { background: #f2f6f4; border-color: #d6e2db; color: #2f5544; }
-  .banner code { background: rgba(0,0,0,.05); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+  .banner.warn { background: #fdeee2; border-color: var(--orange-light); color: #9a4416; }
+  .banner.err  { background: #fdecec; border-color: #f6b4b4; color: #b21f1f; }
+  .banner.info { background: #e9f3ee; border-color: var(--green-light); color: var(--green-darkest); }
+  .banner code { background: rgba(35,31,32,.06); padding: 1px 5px; border-radius: 4px; font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 
   /* Stat cards */
   .cards {
@@ -113,13 +143,13 @@
     padding: 16px 18px;
   }
   .card .k { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 600; }
-  .card .v { font-size: 28px; font-weight: 680; margin-top: 8px; letter-spacing: -0.02em; }
+  .card .v { font-family: var(--font-heading); font-size: 30px; font-weight: 600; margin-top: 8px; letter-spacing: -0.01em; color: var(--ink); }
   .card .v.accent { color: var(--accent); }
   .card .sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
   .pill { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; margin-top: 6px; }
-  .pill.up { background: rgba(47,125,79,.1); color: var(--good); }
-  .pill.down { background: rgba(179,64,42,.1); color: var(--bad); }
-  .pill.flat { background: #eef0ee; color: var(--muted); }
+  .pill.up { background: rgba(12,95,63,.10); color: var(--good); }
+  .pill.down { background: rgba(250,56,56,.10); color: var(--bad); }
+  .pill.flat { background: var(--cream); color: var(--muted); }
 
   /* Panels */
   .panel {
@@ -130,7 +160,7 @@
     padding: 18px 20px 22px;
     margin-bottom: 22px;
   }
-  .panel h2 { font-size: 15px; margin: 0 0 2px; font-weight: 650; }
+  .panel h2 { font-family: var(--font-heading); font-size: 17px; margin: 0 0 3px; font-weight: 600; color: var(--primary-dark); }
   .panel .desc { font-size: 12.5px; color: var(--muted); margin: 0 0 16px; }
   .chart-box { position: relative; height: 320px; }
 
@@ -145,10 +175,10 @@
     border: 1px solid var(--line);
     border-radius: 10px;
     padding: 12px 14px;
-    background: #fcfcfb;
+    background: var(--cream-soft);
   }
-  .stage-cell .sname { font-size: 12px; font-weight: 600; color: var(--ink); }
-  .stage-cell .sdays { font-size: 20px; font-weight: 680; margin-top: 6px; }
+  .stage-cell .sname { font-size: 12px; font-weight: 700; color: var(--green); }
+  .stage-cell .sdays { font-family: var(--font-heading); font-size: 22px; font-weight: 600; margin-top: 6px; color: var(--ink); }
   .stage-cell .smeta { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
 
   .footnote { font-size: 11.5px; color: var(--muted); text-align: center; margin-top: 8px; }
@@ -584,7 +614,7 @@ function renderFunnel(m) {
         label: "Deals entering stage",
         data: counts,
         backgroundColor: counts.map((_, i) =>
-          i === counts.length - 1 ? "#A64E25" : "rgba(166,78,37," + (0.35 + i * 0.18) + ")"),
+          i === counts.length - 1 ? "#0C5F3F" : "rgba(65,163,115," + (0.5 + i * 0.16) + ")"),
         borderRadius: 6,
         maxBarThickness: 90,
       }],
@@ -605,7 +635,7 @@ function renderFunnel(m) {
         },
       },
       scales: {
-        x: { beginAtZero: true, grid: { color: "#eee" }, ticks: { precision: 0 } },
+        x: { beginAtZero: true, grid: { color: "#efe6dc" }, ticks: { precision: 0 } },
         y: { grid: { display: false } },
       },
     },
@@ -625,11 +655,11 @@ function renderVelocity(m) {
           type: "line",
           label: "Avg days to approval",
           data: m.monthlyAvg,
-          borderColor: "#A64E25",
-          backgroundColor: "rgba(166,78,37,0.12)",
+          borderColor: "#EC6C27",
+          backgroundColor: "rgba(236,108,39,0.10)",
           borderWidth: 2.5,
           pointRadius: 4,
-          pointBackgroundColor: "#A64E25",
+          pointBackgroundColor: "#EC6C27",
           tension: 0.3,
           spanGaps: true,
           fill: true,
@@ -639,7 +669,7 @@ function renderVelocity(m) {
           type: "bar",
           label: "Deal volume",
           data: m.monthlyVol,
-          backgroundColor: "rgba(31,36,33,0.12)",
+          backgroundColor: "rgba(137,204,164,0.45)",
           borderRadius: 5,
           maxBarThickness: 38,
           yAxisID: "yVol",
@@ -667,7 +697,7 @@ function renderVelocity(m) {
           position: "left",
           beginAtZero: true,
           title: { display: true, text: "Days to approval" },
-          grid: { color: "#eee" },
+          grid: { color: "#efe6dc" },
         },
         yVol: {
           position: "right",
