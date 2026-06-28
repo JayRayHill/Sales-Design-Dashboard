@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sales Design Pipeline Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --accent: #A64E25;
+    --accent-soft: rgba(166, 78, 37, 0.12);
+    --bg: #f6f6f4;
+    --card: #ffffff;
+    --ink: #1f2421;
+    --muted: #6b7280;
+    --line: #e6e6e2;
+    --good: #2f7d4f;
+    --bad: #b3402a;
+    --radius: 12px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.45;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 24px 20px 64px; }
+
+  header.top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 8px;
+  }
+  .title h1 { font-size: 22px; margin: 0; font-weight: 650; letter-spacing: -0.01em; }
+  .title p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 14px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 14px 16px;
+    margin: 16px 0 22px;
+  }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 600; }
+  .field input, .field select {
+    font: inherit;
+    font-size: 13px;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--ink);
+    min-width: 150px;
+  }
+  .field input:focus, .field select:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+  button.btn {
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 9px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    transition: opacity .15s ease;
+  }
+  button.btn:hover { opacity: .9; }
+  button.btn.ghost { background: #fff; color: var(--accent); }
+
+  /* Status banner */
+  .banner {
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin-bottom: 18px;
+    font-size: 13px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    display: none;
+  }
+  .banner.show { display: block; }
+  .banner.warn { background: #fff8f3; border-color: #f0d3c2; color: #8a4225; }
+  .banner.err  { background: #fdf1ef; border-color: #f0c8c2; color: #9b2f1e; }
+  .banner.info { background: #f2f6f4; border-color: #d6e2db; color: #2f5544; }
+  .banner code { background: rgba(0,0,0,.05); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+
+  /* Stat cards */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px 18px;
+  }
+  .card .k { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 600; }
+  .card .v { font-size: 28px; font-weight: 680; margin-top: 8px; letter-spacing: -0.02em; }
+  .card .v.accent { color: var(--accent); }
+  .card .sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .pill { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; margin-top: 6px; }
+  .pill.up { background: rgba(47,125,79,.1); color: var(--good); }
+  .pill.down { background: rgba(179,64,42,.1); color: var(--bad); }
+  .pill.flat { background: #eef0ee; color: var(--muted); }
+
+  /* Panels */
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px 20px 22px;
+    margin-bottom: 22px;
+  }
+  .panel h2 { font-size: 15px; margin: 0 0 2px; font-weight: 650; }
+  .panel .desc { font-size: 12.5px; color: var(--muted); margin: 0 0 16px; }
+  .chart-box { position: relative; height: 320px; }
+
+  /* Stage table under funnel */
+  .stage-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 18px;
+  }
+  .stage-cell {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+    background: #fcfcfb;
+  }
+  .stage-cell .sname { font-size: 12px; font-weight: 600; color: var(--ink); }
+  .stage-cell .sdays { font-size: 20px; font-weight: 680; margin-top: 6px; }
+  .stage-cell .smeta { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+
+  .footnote { font-size: 11.5px; color: var(--muted); text-align: center; margin-top: 8px; }
+  a { color: var(--accent); }
+
+  /* Loading overlay */
+  .loading { display: none; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; padding: 8px 0; }
+  .loading.show { display: flex; }
+  .spinner {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 2px solid var(--line); border-top-color: var(--accent);
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 860px) {
+    .cards { grid-template-columns: repeat(2, 1fr); }
+    .stage-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 520px) {
+    .cards { grid-template-columns: 1fr; }
+    .stage-grid { grid-template-columns: 1fr; }
+    .controls { gap: 10px; }
+    .field input, .field select { min-width: 120px; width: 100%; }
+    .field { flex: 1 1 140px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="title">
+      <h1>Sales Design Pipeline</h1>
+      <p>Velocity, drop-off, and approval performance · HubSpot deals</p>
+    </div>
+  </header>
+
+  <!-- Controls: pipeline confirm + date range -->
+  <div class="controls">
+    <div class="field">
+      <label for="pipelineSelect">Pipeline</label>
+      <select id="pipelineSelect"><option>Loading…</option></select>
+    </div>
+    <div class="field">
+      <label for="fromDate">From</label>
+      <input type="date" id="fromDate" />
+    </div>
+    <div class="field">
+      <label for="toDate">To</label>
+      <input type="date" id="toDate" />
+    </div>
+    <div class="field" style="justify-content:flex-end;">
+      <label>&nbsp;</label>
+      <button class="btn" id="applyBtn">Apply</button>
+    </div>
+    <div class="field" style="justify-content:flex-end;">
+      <label>&nbsp;</label>
+      <button class="btn ghost" id="reloadBtn">Reload deals</button>
+    </div>
+    <div class="loading" id="loading"><span class="spinner"></span><span id="loadingText">Loading…</span></div>
+  </div>
+
+  <div class="banner" id="banner"></div>
+
+  <!-- Stat cards -->
+  <div class="cards">
+    <div class="card">
+      <div class="k">Avg days to approval</div>
+      <div class="v accent" id="cardAvgDays">—</div>
+      <div class="sub" id="cardAvgDaysSub">Design Start → Approved</div>
+    </div>
+    <div class="card">
+      <div class="k">Approval rate</div>
+      <div class="v" id="cardApproval">—</div>
+      <div class="sub" id="cardApprovalSub">Design Sent → Approved</div>
+    </div>
+    <div class="card">
+      <div class="k">Deals this month</div>
+      <div class="v" id="cardThisMonth">—</div>
+      <div class="sub" id="cardThisMonthSub">Entered pipeline</div>
+    </div>
+    <div class="card">
+      <div class="k">Trend vs last month</div>
+      <div class="v" id="cardTrend">—</div>
+      <div id="cardTrendPill" class="pill flat">—</div>
+    </div>
+  </div>
+
+  <!-- Funnel / drop-off -->
+  <div class="panel">
+    <h2>Stage drop-off funnel</h2>
+    <p class="desc">Deals entering each stage vs. advancing to the next. Bars show volume; the table shows average time spent at each stage.</p>
+    <div class="chart-box"><canvas id="funnelChart"></canvas></div>
+    <div class="stage-grid" id="stageGrid"></div>
+  </div>
+
+  <!-- Monthly velocity -->
+  <div class="panel">
+    <h2>Monthly velocity — time to approval</h2>
+    <p class="desc">Average days from Design Start to Design Approved, by month of approval (Jan 2026 → present). Lower is faster. Bars show deal volume for workload context.</p>
+    <div class="chart-box"><canvas id="velocityChart"></canvas></div>
+    <div class="footnote" id="velocityFoot"></div>
+  </div>
+
+  <div class="footnote">
+    Timestamps sourced from deal <code>hs_date_entered_[stage_id]</code> properties · HubSpot CRM API v3
+  </div>
+
+</div>
+
+<script>
+/* ============================================================================
+   CONFIG — swap the token here. Use a HubSpot Private App token with
+   crm.objects.deals.read and crm.schemas.deals.read scopes.
+   ========================================================================== */
+const HUBSPOT_TOKEN = "pat-na1-XXXXXXXX-REPLACE-ME";   // <-- Private App token
+const HUBSPOT_BASE  = "https://api.hubapi.com";
+
+/* The four logical stages of the sales design pipeline, in order.
+   Stage IDs are resolved at runtime from the chosen pipeline and stored here. */
+const CONFIG = {
+  pipelineId: null,
+  stages: [
+    { key: "start",    label: "Design Start",            id: null, matches: ["design start", "start"] },
+    { key: "contacted",label: "Contacted",               id: null, matches: ["contacted", "contact"] },
+    { key: "sent",     label: "Design Sent to Customer", id: null, matches: ["design sent", "sent to customer", "sent"] },
+    { key: "approved", label: "Design Approved",         id: null, matches: ["design approved", "approved"] },
+  ],
+};
+
+const MONTH_START = new Date(2026, 0, 1); // trend window begins Jan 2026
+
+/* ---- runtime state ---- */
+let RAW_DEALS = [];     // all fetched deals (objects with properties)
+let charts = { funnel: null, velocity: null };
+
+/* ============================================================================
+   HubSpot API helpers
+   ========================================================================== */
+function authHeaders() {
+  return {
+    "Authorization": "Bearer " + HUBSPOT_TOKEN,
+    "Content-Type": "application/json",
+  };
+}
+
+async function hsGet(path) {
+  const res = await fetch(HUBSPOT_BASE + path, { headers: authHeaders() });
+  if (!res.ok) throw new Error("GET " + path + " → " + res.status + " " + res.statusText);
+  return res.json();
+}
+
+async function hsPost(path, body) {
+  const res = await fetch(HUBSPOT_BASE + path, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error("POST " + path + " → " + res.status + " " + res.statusText);
+  return res.json();
+}
+
+/* Fetch the deal pipelines so the user can confirm the sales design one. */
+async function fetchPipelines() {
+  const data = await hsGet("/crm/v3/pipelines/deals");
+  return data.results || [];
+}
+
+/* Map the chosen pipeline's stages into CONFIG by label, falling back to order. */
+function applyPipeline(pipeline) {
+  CONFIG.pipelineId = pipeline.id;
+  const stages = (pipeline.stages || []).slice().sort(
+    (a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0)
+  );
+  // Try label matching first.
+  CONFIG.stages.forEach(cfg => { cfg.id = null; });
+  CONFIG.stages.forEach(cfg => {
+    const found = stages.find(s => {
+      const lbl = (s.label || "").toLowerCase();
+      return cfg.matches.some(m => lbl.includes(m));
+    });
+    if (found) cfg.id = found.id;
+  });
+  // Any unmatched stage falls back to positional order.
+  CONFIG.stages.forEach((cfg, i) => {
+    if (!cfg.id && stages[i]) {
+      cfg.id = stages[i].id;
+      cfg.label = stages[i].label || cfg.label;
+    }
+  });
+  return CONFIG.stages.every(s => s.id);
+}
+
+/* Build the property list we need: core fields + hs_date_entered_<stageId>. */
+function dealProperties() {
+  const props = ["dealname", "dealstage", "createdate", "amount", "pipeline"];
+  CONFIG.stages.forEach(s => { if (s.id) props.push("hs_date_entered_" + s.id); });
+  return props;
+}
+
+/* Fetch ALL deals in the configured pipeline via the search API (paginated). */
+async function fetchAllDeals() {
+  const all = [];
+  let after = undefined;
+  const properties = dealProperties();
+  do {
+    const body = {
+      filterGroups: [{
+        filters: [{ propertyName: "pipeline", operator: "EQ", value: CONFIG.pipelineId }],
+      }],
+      properties,
+      limit: 100,
+      sorts: [{ propertyName: "createdate", direction: "ASCENDING" }],
+    };
+    if (after) body.after = after;
+    const data = await hsPost("/crm/v3/objects/deals/search", body);
+    (data.results || []).forEach(d => all.push(d));
+    after = data.paging && data.paging.next ? data.paging.next.after : undefined;
+    setLoading(true, "Fetching deals… " + all.length);
+  } while (after);
+  return all;
+}
+
+/* ============================================================================
+   Metrics
+   ========================================================================== */
+const DAY_MS = 1000 * 60 * 60 * 24;
+
+function parseTs(v) {
+  if (!v) return null;
+  const t = (typeof v === "number") ? v : Date.parse(v);
+  return isNaN(t) ? null : t;
+}
+
+/* Pull a deal's stage-entry timestamps keyed by stage logical key. */
+function dealStageTimes(deal) {
+  const p = deal.properties || {};
+  const out = {};
+  CONFIG.stages.forEach(s => {
+    out[s.key] = s.id ? parseTs(p["hs_date_entered_" + s.id]) : null;
+  });
+  return out;
+}
+
+function monthKey(ts) {
+  const d = new Date(ts);
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+}
+function monthLabel(key) {
+  const [y, m] = key.split("-").map(Number);
+  return new Date(y, m - 1, 1).toLocaleString("en-US", { month: "short", year: "2-digit" });
+}
+
+/* Apply the date-range filter. A deal is included if its entry into the
+   pipeline (Design Start, else createdate) falls within [from, to]. */
+function filterDeals(deals, fromTs, toTs) {
+  return deals.filter(d => {
+    const t = dealStageTimes(d);
+    const anchor = t.start || parseTs((d.properties || {}).createdate);
+    if (anchor == null) return false;
+    if (fromTs != null && anchor < fromTs) return false;
+    if (toTs != null && anchor > toTs) return false;
+    return true;
+  });
+}
+
+function computeMetrics(deals) {
+  const stageKeys = CONFIG.stages.map(s => s.key);
+
+  // --- Funnel: how many deals entered each stage ---
+  const entered = {};
+  stageKeys.forEach(k => entered[k] = 0);
+  // --- Avg time at each stage (entry of this stage → entry of next) ---
+  const stageDurations = {};
+  stageKeys.forEach(k => stageDurations[k] = []);
+
+  // --- time to approval per deal, plus monthly grouping ---
+  const monthlyApprovalDays = {};  // monthKey -> [days]
+  const monthlyVolume = {};        // monthKey -> count of deals entering pipeline
+
+  deals.forEach(d => {
+    const t = dealStageTimes(d);
+
+    stageKeys.forEach((k, i) => {
+      if (t[k] != null) {
+        entered[k]++;
+        const next = stageKeys[i + 1];
+        if (next && t[next] != null && t[next] >= t[k]) {
+          stageDurations[k].push((t[next] - t[k]) / DAY_MS);
+        }
+      }
+    });
+
+    // monthly volume by pipeline entry
+    const anchor = t.start || parseTs((d.properties || {}).createdate);
+    if (anchor != null) {
+      const mk = monthKey(anchor);
+      monthlyVolume[mk] = (monthlyVolume[mk] || 0) + 1;
+    }
+
+    // time-to-approval, grouped by approval month
+    if (t.start != null && t.approved != null && t.approved >= t.start) {
+      const days = (t.approved - t.start) / DAY_MS;
+      const mk = monthKey(t.approved);
+      (monthlyApprovalDays[mk] = monthlyApprovalDays[mk] || []).push(days);
+    }
+  });
+
+  const avg = arr => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
+
+  const stageAvgDays = {};
+  stageKeys.forEach(k => stageAvgDays[k] = avg(stageDurations[k]));
+
+  // Overall avg days to approval (start -> approved)
+  const allApprovalDays = [];
+  Object.values(monthlyApprovalDays).forEach(a => a.forEach(v => allApprovalDays.push(v)));
+  const avgDaysToApproval = avg(allApprovalDays);
+
+  // Approval rate: of deals that reached Design Sent, % that reached Approved
+  const reachedSent = entered.sent || 0;
+  const reachedApproved = entered.approved || 0;
+  const approvalRate = reachedSent ? (reachedApproved / reachedSent) : null;
+
+  // Build month axis from Jan 2026 -> latest present month
+  const now = new Date();
+  const months = [];
+  let cur = new Date(MONTH_START);
+  const end = new Date(now.getFullYear(), now.getMonth(), 1);
+  while (cur <= end) {
+    months.push(cur.getFullYear() + "-" + String(cur.getMonth() + 1).padStart(2, "0"));
+    cur = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
+  }
+
+  const monthlyAvg = months.map(mk => {
+    const a = monthlyApprovalDays[mk];
+    return a && a.length ? avg(a) : null;
+  });
+  const monthlyVol = months.map(mk => monthlyVolume[mk] || 0);
+
+  // This month volume + trend vs last month (time-to-approval)
+  const thisMk = months[months.length - 1];
+  const lastMk = months[months.length - 2];
+  const thisMonthDeals = monthlyVolume[thisMk] || 0;
+  const thisAvg = monthlyApprovalDays[thisMk] ? avg(monthlyApprovalDays[thisMk]) : null;
+  const lastAvg = monthlyApprovalDays[lastMk] ? avg(monthlyApprovalDays[lastMk]) : null;
+
+  return {
+    entered, stageAvgDays, avgDaysToApproval, approvalRate,
+    reachedSent, reachedApproved,
+    months, monthlyAvg, monthlyVol,
+    thisMonthDeals, thisAvg, lastAvg,
+    totalDeals: deals.length,
+  };
+}
+
+/* ============================================================================
+   Rendering
+   ========================================================================== */
+function fmtDays(v) { return v == null ? "—" : (Math.round(v * 10) / 10).toFixed(1) + "d"; }
+function fmtPct(v)  { return v == null ? "—" : Math.round(v * 100) + "%"; }
+
+function renderCards(m) {
+  document.getElementById("cardAvgDays").textContent = m.avgDaysToApproval == null ? "—" : fmtDays(m.avgDaysToApproval);
+  document.getElementById("cardAvgDaysSub").textContent =
+    "Across " + (m.entered.approved || 0) + " approved deals";
+
+  document.getElementById("cardApproval").textContent = fmtPct(m.approvalRate);
+  document.getElementById("cardApprovalSub").textContent =
+    m.reachedApproved + " of " + m.reachedSent + " reaching Design Sent";
+
+  document.getElementById("cardThisMonth").textContent = m.thisMonthDeals;
+  document.getElementById("cardThisMonthSub").textContent =
+    new Date().toLocaleString("en-US", { month: "long", year: "numeric" });
+
+  // Trend: improvement = fewer days this month vs last month
+  const trendEl = document.getElementById("cardTrend");
+  const pill = document.getElementById("cardTrendPill");
+  if (m.thisAvg == null || m.lastAvg == null) {
+    trendEl.textContent = "—";
+    pill.className = "pill flat";
+    pill.textContent = "Not enough data";
+  } else {
+    const delta = m.thisAvg - m.lastAvg;          // negative = faster = better
+    const pctChange = m.lastAvg ? (delta / m.lastAvg) : 0;
+    trendEl.textContent = (delta <= 0 ? "" : "+") + (Math.round(delta * 10) / 10) + "d";
+    if (delta < -0.05) {
+      pill.className = "pill up";
+      pill.textContent = "▲ " + Math.abs(Math.round(pctChange * 100)) + "% faster";
+    } else if (delta > 0.05) {
+      pill.className = "pill down";
+      pill.textContent = "▼ " + Math.abs(Math.round(pctChange * 100)) + "% slower";
+    } else {
+      pill.className = "pill flat";
+      pill.textContent = "Flat vs last month";
+    }
+  }
+}
+
+function renderStageGrid(m) {
+  const grid = document.getElementById("stageGrid");
+  grid.innerHTML = "";
+  CONFIG.stages.forEach((s, i) => {
+    const next = CONFIG.stages[i + 1];
+    const cell = document.createElement("div");
+    cell.className = "stage-cell";
+    const avgDays = m.stageAvgDays[s.key];
+    const metaText = next
+      ? "avg in stage → " + next.label
+      : "terminal stage";
+    cell.innerHTML =
+      '<div class="sname">' + (i + 1) + '. ' + s.label + '</div>' +
+      '<div class="sdays">' + (next ? fmtDays(avgDays) : "—") + '</div>' +
+      '<div class="smeta">' + m.entered[s.key] + ' deals · ' + metaText + '</div>';
+    grid.appendChild(cell);
+  });
+}
+
+function renderFunnel(m) {
+  const labels = CONFIG.stages.map((s, i) => (i + 1) + ". " + s.label);
+  const counts = CONFIG.stages.map(s => m.entered[s.key]);
+  const ctx = document.getElementById("funnelChart").getContext("2d");
+  if (charts.funnel) charts.funnel.destroy();
+
+  // Drop-off % from previous stage, for tooltips
+  const dropoff = counts.map((c, i) => i === 0 || counts[i - 1] === 0 ? null : 1 - c / counts[i - 1]);
+
+  charts.funnel = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Deals entering stage",
+        data: counts,
+        backgroundColor: counts.map((_, i) =>
+          i === counts.length - 1 ? "#A64E25" : "rgba(166,78,37," + (0.35 + i * 0.18) + ")"),
+        borderRadius: 6,
+        maxBarThickness: 90,
+      }],
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            afterLabel: (ctx) => {
+              const d = dropoff[ctx.dataIndex];
+              return d == null ? "" : "Drop-off from previous: " + Math.round(d * 100) + "%";
+            },
+          },
+        },
+      },
+      scales: {
+        x: { beginAtZero: true, grid: { color: "#eee" }, ticks: { precision: 0 } },
+        y: { grid: { display: false } },
+      },
+    },
+  });
+}
+
+function renderVelocity(m) {
+  const labels = m.months.map(monthLabel);
+  const ctx = document.getElementById("velocityChart").getContext("2d");
+  if (charts.velocity) charts.velocity.destroy();
+
+  charts.velocity = new Chart(ctx, {
+    data: {
+      labels,
+      datasets: [
+        {
+          type: "line",
+          label: "Avg days to approval",
+          data: m.monthlyAvg,
+          borderColor: "#A64E25",
+          backgroundColor: "rgba(166,78,37,0.12)",
+          borderWidth: 2.5,
+          pointRadius: 4,
+          pointBackgroundColor: "#A64E25",
+          tension: 0.3,
+          spanGaps: true,
+          fill: true,
+          yAxisID: "yDays",
+        },
+        {
+          type: "bar",
+          label: "Deal volume",
+          data: m.monthlyVol,
+          backgroundColor: "rgba(31,36,33,0.12)",
+          borderRadius: 5,
+          maxBarThickness: 38,
+          yAxisID: "yVol",
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: { position: "top", labels: { boxWidth: 12, font: { size: 12 } } },
+        tooltip: {
+          callbacks: {
+            label: (c) => {
+              if (c.dataset.yAxisID === "yDays")
+                return " Avg days: " + (c.parsed.y == null ? "n/a" : (Math.round(c.parsed.y * 10) / 10));
+              return " Deals: " + c.parsed.y;
+            },
+          },
+        },
+      },
+      scales: {
+        yDays: {
+          position: "left",
+          beginAtZero: true,
+          title: { display: true, text: "Days to approval" },
+          grid: { color: "#eee" },
+        },
+        yVol: {
+          position: "right",
+          beginAtZero: true,
+          title: { display: true, text: "Deal volume" },
+          grid: { drawOnChartArea: false },
+          ticks: { precision: 0 },
+        },
+        x: { grid: { display: false } },
+      },
+    },
+  });
+
+  const firstReal = m.monthlyAvg.find(v => v != null);
+  const lastRealIdx = [...m.monthlyAvg].map((v, i) => v != null ? i : -1).filter(i => i >= 0).pop();
+  const foot = document.getElementById("velocityFoot");
+  if (firstReal != null && lastRealIdx != null && m.monthlyAvg[lastRealIdx] != null) {
+    const delta = m.monthlyAvg[lastRealIdx] - firstReal;
+    const dir = delta < 0 ? "faster" : "slower";
+    foot.textContent = "Since first tracked month, time-to-approval is "
+      + Math.abs(Math.round(delta * 10) / 10) + " days " + dir + ".";
+  } else {
+    foot.textContent = "";
+  }
+}
+
+function renderAll() {
+  const fromTs = parseDateInput("fromDate", false);
+  const toTs   = parseDateInput("toDate", true);
+  const filtered = filterDeals(RAW_DEALS, fromTs, toTs);
+  const m = computeMetrics(filtered);
+  renderCards(m);
+  renderStageGrid(m);
+  renderFunnel(m);
+  renderVelocity(m);
+}
+
+function parseDateInput(id, endOfDay) {
+  const v = document.getElementById(id).value;
+  if (!v) return null;
+  const [y, mo, d] = v.split("-").map(Number);
+  const dt = endOfDay ? new Date(y, mo - 1, d, 23, 59, 59) : new Date(y, mo - 1, d, 0, 0, 0);
+  return dt.getTime();
+}
+
+/* ============================================================================
+   UI plumbing
+   ========================================================================== */
+function setLoading(on, text) {
+  const el = document.getElementById("loading");
+  el.classList.toggle("show", !!on);
+  if (text) document.getElementById("loadingText").textContent = text;
+}
+function banner(kind, html) {
+  const el = document.getElementById("banner");
+  el.className = "banner show " + kind;
+  el.innerHTML = html;
+}
+function hideBanner() { document.getElementById("banner").className = "banner"; }
+
+async function loadPipelinesIntoSelect() {
+  const sel = document.getElementById("pipelineSelect");
+  try {
+    setLoading(true, "Loading pipelines…");
+    const pipelines = await fetchPipelines();
+    sel.innerHTML = "";
+    pipelines.forEach(p => {
+      const opt = document.createElement("option");
+      opt.value = p.id;
+      opt.textContent = p.label + " (" + (p.stages ? p.stages.length : 0) + " stages)";
+      opt.dataset.pipeline = JSON.stringify(p);
+      sel.appendChild(opt);
+    });
+    // Auto-select a likely "sales design" pipeline
+    const guess = pipelines.find(p => /design/i.test(p.label)) || pipelines[0];
+    if (guess) sel.value = guess.id;
+    setLoading(false);
+    return pipelines;
+  } catch (e) {
+    setLoading(false);
+    sel.innerHTML = '<option>API unavailable — demo data</option>';
+    throw e;
+  }
+}
+
+async function onPipelineChosen() {
+  const sel = document.getElementById("pipelineSelect");
+  const opt = sel.selectedOptions[0];
+  if (!opt || !opt.dataset.pipeline) return false;
+  const pipeline = JSON.parse(opt.dataset.pipeline);
+  const ok = applyPipeline(pipeline);
+  if (!ok) {
+    banner("warn", "Confirm this is the <strong>Sales Design</strong> pipeline. "
+      + "Mapped stages: " + CONFIG.stages.map(s => s.label).join(" → ") + ". "
+      + "Some stage IDs could not be matched by name and were mapped by order.");
+  } else {
+    banner("info", "Pipeline confirmed: stages mapped to "
+      + CONFIG.stages.map(s => s.label).join(" → ") + ".");
+  }
+  return true;
+}
+
+async function loadDealsAndRender() {
+  try {
+    hideBanner();
+    setLoading(true, "Fetching deals…");
+    RAW_DEALS = await fetchAllDeals();
+    setLoading(false);
+    if (!RAW_DEALS.length) {
+      banner("warn", "No deals returned for this pipeline.");
+    }
+    renderAll();
+  } catch (e) {
+    setLoading(false);
+    banner("err", "Could not fetch live deals (<code>" + escapeHtml(e.message) + "</code>). "
+      + "Showing <strong>demo data</strong> so you can preview the dashboard. "
+      + "Browsers block direct HubSpot API calls via CORS — serve this through a small proxy "
+      + "or run it from a backend, and set a valid token in <code>HUBSPOT_TOKEN</code>.");
+    RAW_DEALS = makeDemoDeals();
+    renderAll();
+  }
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+
+/* ============================================================================
+   Demo data — lets the dashboard render with realistic shape when the live
+   API is unreachable (e.g. CORS, placeholder token). Mirrors the real
+   property structure: deals carry hs_date_entered_<stageId> timestamps.
+   ========================================================================== */
+function makeDemoDeals() {
+  // synthetic stage IDs
+  CONFIG.pipelineId = "demo-pipeline";
+  const ids = ["1000001", "1000002", "1000003", "1000004"];
+  CONFIG.stages.forEach((s, i) => { s.id = ids[i]; });
+
+  const deals = [];
+  const start = new Date(2026, 0, 1);
+  const now = new Date(2026, 5, 28);
+  // deterministic pseudo-random
+  let seed = 42;
+  const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+
+  // velocity improves over time: avg approval time shrinks month by month
+  let cursor = new Date(start);
+  let id = 1;
+  while (cursor < now) {
+    const monthIdx = (cursor.getFullYear() - 2026) * 12 + cursor.getMonth();
+    const baseDays = Math.max(6, 22 - monthIdx * 2.5);   // improving velocity
+    const volume = 14 + Math.round(rnd() * 8) + monthIdx; // growing workload
+    for (let k = 0; k < volume; k++) {
+      const day = 1 + Math.floor(rnd() * 26);
+      const t0 = new Date(cursor.getFullYear(), cursor.getMonth(), day, 9, 0, 0).getTime();
+      const d1 = baseDays * (0.18 + rnd() * 0.2);
+      const d2 = baseDays * (0.22 + rnd() * 0.25);
+      const d3 = baseDays * (0.30 + rnd() * 0.3);
+      const tContacted = t0 + d1 * DAY_MS;
+      const tSent = tContacted + d2 * DAY_MS;
+      const tApproved = tSent + d3 * DAY_MS;
+
+      const props = {
+        dealname: "Design Deal #" + id,
+        pipeline: CONFIG.pipelineId,
+        createdate: new Date(t0).toISOString(),
+        amount: String(2000 + Math.round(rnd() * 8000)),
+      };
+      // funnel drop-off: not every deal advances all the way
+      const r = rnd();
+      props["hs_date_entered_" + ids[0]] = new Date(t0).toISOString();
+      if (r > 0.06) props["hs_date_entered_" + ids[1]] = new Date(tContacted).toISOString();
+      if (r > 0.22) props["hs_date_entered_" + ids[2]] = new Date(tSent).toISOString();
+      // of those reaching Sent, ~78% get approved
+      if (r > 0.22 && rnd() > 0.22 && tApproved < now.getTime() + DAY_MS)
+        props["hs_date_entered_" + ids[3]] = new Date(tApproved).toISOString();
+
+      deals.push({ id: String(id), properties: props });
+      id++;
+    }
+    cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+  }
+  return deals;
+}
+
+/* ============================================================================
+   Boot
+   ========================================================================== */
+function setDefaultDates() {
+  document.getElementById("fromDate").value = "2026-01-01";
+  const now = new Date();
+  document.getElementById("toDate").value =
+    now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
+}
+
+async function boot() {
+  setDefaultDates();
+
+  document.getElementById("applyBtn").addEventListener("click", renderAll);
+  document.getElementById("reloadBtn").addEventListener("click", async () => {
+    await onPipelineChosen();
+    await loadDealsAndRender();
+  });
+  document.getElementById("pipelineSelect").addEventListener("change", async () => {
+    await onPipelineChosen();
+    await loadDealsAndRender();
+  });
+
+  const tokenLooksReal = HUBSPOT_TOKEN && !/REPLACE-ME|XXXX/.test(HUBSPOT_TOKEN);
+
+  try {
+    await loadPipelinesIntoSelect();
+    await onPipelineChosen();
+    await loadDealsAndRender();
+  } catch (e) {
+    // Pipelines couldn't load (bad token / CORS) — fall back to demo.
+    if (!tokenLooksReal) {
+      banner("info", "No valid HubSpot token set yet. Showing <strong>demo data</strong>. "
+        + "Set <code>HUBSPOT_TOKEN</code> at the top of this file to connect live data.");
+    } else {
+      banner("err", "Could not reach HubSpot (<code>" + escapeHtml(e.message) + "</code>). "
+        + "Showing demo data. Direct browser calls are often blocked by CORS — use a proxy/backend.");
+    }
+    RAW_DEALS = makeDemoDeals();
+    renderAll();
+  }
+}
+
+document.addEventListener("DOMContentLoaded", boot);
+</script>
+</body>
+</html>
