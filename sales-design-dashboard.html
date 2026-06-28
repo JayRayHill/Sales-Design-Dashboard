@@ -151,6 +151,41 @@
   .pill.down { background: rgba(250,56,56,.10); color: var(--bad); }
   .pill.flat { background: var(--cream); color: var(--muted); }
 
+  /* Headline insight strip */
+  .insight {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    background: linear-gradient(0deg, #fff, #fff) padding-box,
+                linear-gradient(90deg, var(--green), var(--orange)) border-box;
+    border: 1px solid transparent;
+    border-left: 4px solid var(--orange);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 13px 16px;
+    margin-bottom: 22px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+  .insight-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--orange); margin-top: 6px; flex: none; }
+  .insight-text b { color: var(--green); font-weight: 700; }
+  .insight-text .hot { color: var(--orange-darkest); font-weight: 700; }
+
+  /* Goal progress bar inside KPI cards */
+  .goalbar { position: relative; height: 5px; border-radius: 999px; background: var(--gray-light); margin: 10px 0 8px; overflow: hidden; }
+  .goalbar-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: var(--green); transition: width .4s ease; }
+  .goalbar-fill.over { background: var(--orange); }
+  .goalbar-mark { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--ink); opacity: .55; }
+
+  /* Bottleneck highlight on a stage cell */
+  .stage-cell.bottleneck { background: #fdeee2; border-color: var(--orange); }
+  .stage-cell .tag {
+    display: inline-block; margin-top: 7px; font-size: 10.5px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .04em;
+    color: #fff; background: var(--orange); padding: 2px 7px; border-radius: 999px;
+  }
+
   /* Panels */
   .panel {
     background: var(--card);
@@ -244,16 +279,24 @@
 
   <div class="banner" id="banner"></div>
 
+  <!-- Headline insight: auto-generated "what to do" summary -->
+  <div class="insight" id="insight" style="display:none;">
+    <span class="insight-dot"></span>
+    <span class="insight-text" id="insightText"></span>
+  </div>
+
   <!-- Stat cards -->
   <div class="cards">
     <div class="card">
       <div class="k">Avg days to approval</div>
       <div class="v accent" id="cardAvgDays">—</div>
+      <div class="goalbar"><span class="goalbar-fill" id="avgGoalFill"></span><span class="goalbar-mark" id="avgGoalMark"></span></div>
       <div class="sub" id="cardAvgDaysSub">Design Start → Approved</div>
     </div>
     <div class="card">
       <div class="k">Approval rate</div>
       <div class="v" id="cardApproval">—</div>
+      <div class="goalbar"><span class="goalbar-fill" id="apprGoalFill"></span><span class="goalbar-mark" id="apprGoalMark"></span></div>
       <div class="sub" id="cardApprovalSub">Design Sent → Approved</div>
     </div>
     <div class="card">
@@ -271,7 +314,7 @@
   <!-- Funnel / drop-off -->
   <div class="panel">
     <h2>Stage drop-off funnel</h2>
-    <p class="desc">Deals entering each stage vs. advancing to the next. Bars show volume; the table shows average time spent at each stage.</p>
+    <p class="desc">Deals entering each stage vs. advancing to the next — drop-off % is shown beside each bar, and the slowest stage is flagged as the bottleneck below.</p>
     <div class="chart-box"><canvas id="funnelChart"></canvas></div>
     <div class="stage-grid" id="stageGrid"></div>
   </div>
@@ -279,7 +322,7 @@
   <!-- Monthly velocity -->
   <div class="panel">
     <h2>Monthly velocity — time to approval</h2>
-    <p class="desc">Average days from Design Start to Design Approved, by month of approval (Jan 2026 → present). Lower is faster. Bars show deal volume for workload context.</p>
+    <p class="desc">Average days from Design Start to Design Approved, by month of approval (Jan 2026 → present). Lower is faster; the dashed line marks the team goal. Bars show deal volume for workload context.</p>
     <div class="chart-box"><canvas id="velocityChart"></canvas></div>
     <div class="footnote" id="velocityFoot"></div>
   </div>
@@ -311,6 +354,12 @@ const CONFIG = {
 };
 
 const MONTH_START = new Date(2026, 0, 1); // trend window begins Jan 2026
+
+/* Targets used for benchmark lines & card goal context. Adjust to your team's SLAs. */
+const GOALS = {
+  daysToApproval: 14,   // goal: Design Start → Approved in ≤ 14 days
+  approvalRate: 0.80,   // goal: 80% of Design Sent deals get approved
+};
 
 /* ---- runtime state ---- */
 let RAW_DEALS = [];     // all fetched deals (objects with properties)
@@ -526,11 +575,42 @@ function computeMetrics(deals) {
   const thisAvg = monthlyApprovalDays[thisMk] ? avg(monthlyApprovalDays[thisMk]) : null;
   const lastAvg = monthlyApprovalDays[lastMk] ? avg(monthlyApprovalDays[lastMk]) : null;
 
+  // --- Stage-to-stage conversion (entered next / entered this) ---
+  const conversions = stageKeys.slice(0, -1).map((k, i) => {
+    const from = entered[k] || 0;
+    const to = entered[stageKeys[i + 1]] || 0;
+    return {
+      i,
+      fromKey: k, toKey: stageKeys[i + 1],
+      fromLabel: CONFIG.stages[i].label, toLabel: CONFIG.stages[i + 1].label,
+      from, to,
+      rate: from ? to / from : null,          // % advancing
+      dropRate: from ? 1 - to / from : null,  // % lost
+    };
+  });
+
+  // --- Worst transition (biggest leak) ---
+  let worstTransitionIdx = -1, worstDrop = -1;
+  conversions.forEach(c => {
+    if (c.from > 0 && c.dropRate != null && c.dropRate > worstDrop) {
+      worstDrop = c.dropRate; worstTransitionIdx = c.i;
+    }
+  });
+
+  // --- Bottleneck: non-terminal stage consuming the most average time ---
+  let bottleneckKey = null, bottleneckDays = -1;
+  stageKeys.slice(0, -1).forEach(k => {
+    const d = stageAvgDays[k];
+    if (d != null && d > bottleneckDays) { bottleneckDays = d; bottleneckKey = k; }
+  });
+
   return {
     entered, stageAvgDays, avgDaysToApproval, approvalRate,
     reachedSent, reachedApproved,
     months, monthlyAvg, monthlyVol,
     thisMonthDeals, thisAvg, lastAvg,
+    conversions, worstTransitionIdx, worstDrop,
+    bottleneckKey, bottleneckDays,
     totalDeals: deals.length,
   };
 }
@@ -543,12 +623,38 @@ function fmtPct(v)  { return v == null ? "—" : Math.round(v * 100) + "%"; }
 
 function renderCards(m) {
   document.getElementById("cardAvgDays").textContent = m.avgDaysToApproval == null ? "—" : fmtDays(m.avgDaysToApproval);
-  document.getElementById("cardAvgDaysSub").textContent =
-    "Across " + (m.entered.approved || 0) + " approved deals";
+  // Goal bar — lower is better; marker sits at the target.
+  if (m.avgDaysToApproval == null) {
+    document.getElementById("avgGoalFill").style.width = "0%";
+    document.getElementById("avgGoalMark").style.left = "0%";
+    document.getElementById("cardAvgDaysSub").textContent = "Across " + (m.entered.approved || 0) + " approved deals";
+  } else {
+    const scale = Math.max(GOALS.daysToApproval * 1.6, m.avgDaysToApproval);
+    const fill = document.getElementById("avgGoalFill");
+    fill.style.width = Math.min(100, (m.avgDaysToApproval / scale) * 100) + "%";
+    fill.classList.toggle("over", m.avgDaysToApproval > GOALS.daysToApproval);
+    document.getElementById("avgGoalMark").style.left = (GOALS.daysToApproval / scale) * 100 + "%";
+    const diff = m.avgDaysToApproval - GOALS.daysToApproval;
+    document.getElementById("cardAvgDaysSub").textContent =
+      "Goal ≤ " + GOALS.daysToApproval + "d · " +
+      (diff <= 0 ? Math.abs(Math.round(diff * 10) / 10) + "d under target" : Math.round(diff * 10) / 10 + "d over target");
+  }
 
   document.getElementById("cardApproval").textContent = fmtPct(m.approvalRate);
-  document.getElementById("cardApprovalSub").textContent =
-    m.reachedApproved + " of " + m.reachedSent + " reaching Design Sent";
+  // Goal bar — higher is better.
+  if (m.approvalRate == null) {
+    document.getElementById("apprGoalFill").style.width = "0%";
+    document.getElementById("apprGoalMark").style.left = (GOALS.approvalRate * 100) + "%";
+    document.getElementById("cardApprovalSub").textContent =
+      m.reachedApproved + " of " + m.reachedSent + " reaching Design Sent";
+  } else {
+    const fill = document.getElementById("apprGoalFill");
+    fill.style.width = Math.min(100, m.approvalRate * 100) + "%";
+    fill.classList.toggle("over", m.approvalRate < GOALS.approvalRate); // under target → orange
+    document.getElementById("apprGoalMark").style.left = (GOALS.approvalRate * 100) + "%";
+    document.getElementById("cardApprovalSub").textContent =
+      m.reachedApproved + " of " + m.reachedSent + " · goal " + Math.round(GOALS.approvalRate * 100) + "%";
+  }
 
   document.getElementById("cardThisMonth").textContent = m.thisMonthDeals;
   document.getElementById("cardThisMonthSub").textContent =
@@ -578,13 +684,52 @@ function renderCards(m) {
   }
 }
 
+/* Auto-generated headline — the "so what?" line, in UNIQ Supply's warm voice. */
+function renderInsight(m) {
+  const el = document.getElementById("insight");
+  const txt = document.getElementById("insightText");
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+  let velocity = null;
+  if (m.thisAvg != null && m.lastAvg != null && m.lastAvg > 0) {
+    const pct = Math.round(Math.abs((m.thisAvg - m.lastAvg) / m.lastAvg) * 100);
+    if (m.thisAvg < m.lastAvg - 0.05) velocity = "You're closing designs <b>" + pct + "% faster</b> than last month";
+    else if (m.thisAvg > m.lastAvg + 0.05) velocity = "Designs are closing <span class='hot'>" + pct + "% slower</span> than last month";
+    else velocity = "Velocity is <b>holding steady</b> vs last month";
+  }
+
+  let bottleneck = null;
+  if (m.bottleneckKey) {
+    const s = CONFIG.stages.find(x => x.key === m.bottleneckKey);
+    bottleneck = "the biggest time sink is the <span class='hot'>" + s.label +
+      "</span> stage (" + fmtDays(m.bottleneckDays) + " avg before advancing)";
+  }
+
+  let leak = null;
+  if (m.worstTransitionIdx >= 0) {
+    const c = m.conversions[m.worstTransitionIdx];
+    leak = "the largest drop-off is <span class='hot'>" + c.fromLabel + " → " + c.toLabel +
+      "</span>, losing " + Math.round(c.dropRate * 100) + "% of deals";
+  }
+
+  let s = velocity ? cap(velocity) + "." : "";
+  const rest = [bottleneck, leak].filter(Boolean);
+  if (rest.length === 2) s += (s ? " " : "") + cap(rest[0]) + ", and " + rest[1] + ".";
+  else if (rest.length === 1) s += (s ? " " : "") + cap(rest[0]) + ".";
+
+  if (!s) { el.style.display = "none"; return; }
+  txt.innerHTML = s + " Focus there to move the needle.";
+  el.style.display = "flex";
+}
+
 function renderStageGrid(m) {
   const grid = document.getElementById("stageGrid");
   grid.innerHTML = "";
   CONFIG.stages.forEach((s, i) => {
     const next = CONFIG.stages[i + 1];
     const cell = document.createElement("div");
-    cell.className = "stage-cell";
+    const isBottleneck = next && s.key === m.bottleneckKey;
+    cell.className = "stage-cell" + (isBottleneck ? " bottleneck" : "");
     const avgDays = m.stageAvgDays[s.key];
     const metaText = next
       ? "avg in stage → " + next.label
@@ -592,7 +737,8 @@ function renderStageGrid(m) {
     cell.innerHTML =
       '<div class="sname">' + (i + 1) + '. ' + s.label + '</div>' +
       '<div class="sdays">' + (next ? fmtDays(avgDays) : "—") + '</div>' +
-      '<div class="smeta">' + m.entered[s.key] + ' deals · ' + metaText + '</div>';
+      '<div class="smeta">' + m.entered[s.key] + ' deals · ' + metaText + '</div>' +
+      (isBottleneck ? '<div class="tag">◆ Bottleneck</div>' : '');
     grid.appendChild(cell);
   });
 }
@@ -603,11 +749,54 @@ function renderFunnel(m) {
   const ctx = document.getElementById("funnelChart").getContext("2d");
   if (charts.funnel) charts.funnel.destroy();
 
+  const maxCount = Math.max(1, ...counts);
+  const HEAD = "var(--font-body)";
+  const narrow = (typeof window !== "undefined") && window.innerWidth < 560;
+
   // Drop-off % from previous stage, for tooltips
   const dropoff = counts.map((c, i) => i === 0 || counts[i - 1] === 0 ? null : 1 - c / counts[i - 1]);
 
+  // Inline plugin: draw count + conversion/drop-off labels to the right of each bar.
+  const funnelLabels = {
+    id: "funnelLabels",
+    afterDatasetsDraw(chart) {
+      const meta = chart.getDatasetMeta(0);
+      const c = chart.ctx;
+      const compact = chart.width < 560;   // shorten labels on narrow / mobile widths
+      c.save();
+      c.textBaseline = "middle";
+      meta.data.forEach((bar, i) => {
+        const x = bar.x + 10, y = bar.y;
+        // count
+        c.textAlign = "left";
+        c.font = "700 13px " + HEAD;
+        c.fillStyle = "#231F20";
+        c.fillText(String(counts[i]), x, y);
+        const w = c.measureText(String(counts[i])).width;
+        // conversion from previous stage
+        if (i > 0 && counts[i - 1] > 0) {
+          const rate = counts[i] / counts[i - 1];
+          const drop = Math.round((1 - rate) * 100);
+          const worst = (i - 1) === m.worstTransitionIdx && drop > 0;
+          c.font = (worst ? "700 " : "600 ") + "11.5px " + HEAD;
+          c.fillStyle = worst ? "#D7532F" : "#7c736e";
+          const label = compact
+            ? (worst ? "◆ " : "▾ ") + drop + "%"
+            : (worst ? "◆ " : "▾ ") + drop + "% drop · " + Math.round(rate * 100) + "% advanced";
+          c.fillText(label, x + w + 10, y);
+        } else if (i === 0 && !compact) {
+          c.font = "600 11.5px " + HEAD;
+          c.fillStyle = "#7c736e";
+          c.fillText("entered pipeline", x + w + 10, y);
+        }
+      });
+      c.restore();
+    },
+  };
+
   charts.funnel = new Chart(ctx, {
     type: "bar",
+    plugins: [funnelLabels],
     data: {
       labels,
       datasets: [{
@@ -623,6 +812,7 @@ function renderFunnel(m) {
       indexAxis: "y",
       responsive: true,
       maintainAspectRatio: false,
+      layout: { padding: { right: 8 } },
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -635,7 +825,8 @@ function renderFunnel(m) {
         },
       },
       scales: {
-        x: { beginAtZero: true, grid: { color: "#efe6dc" }, ticks: { precision: 0 } },
+        // headroom so the labels to the right of each bar are never clipped
+        x: { beginAtZero: true, max: Math.ceil(maxCount * (narrow ? 1.55 : 1.45)), grid: { color: "#efe6dc" }, ticks: { precision: 0 } },
         y: { grid: { display: false } },
       },
     },
@@ -647,7 +838,33 @@ function renderVelocity(m) {
   const ctx = document.getElementById("velocityChart").getContext("2d");
   if (charts.velocity) charts.velocity.destroy();
 
+  // Inline plugin: dashed goal line at the target days-to-approval.
+  const goalLine = {
+    id: "goalLine",
+    afterDatasetsDraw(chart) {
+      const yS = chart.scales.yDays, area = chart.chartArea, c = chart.ctx;
+      const gy = yS.getPixelForValue(GOALS.daysToApproval);
+      if (gy < area.top || gy > area.bottom) return;
+      c.save();
+      c.strokeStyle = "#0C5F3F";
+      c.setLineDash([5, 4]);
+      c.lineWidth = 1.5;
+      c.beginPath(); c.moveTo(area.left, gy); c.lineTo(area.right, gy); c.stroke();
+      c.setLineDash([]);
+      const txt = "Goal " + GOALS.daysToApproval + "d";
+      c.font = "700 11px var(--font-body)";
+      const tw = c.measureText(txt).width;
+      c.fillStyle = "rgba(12,95,63,0.12)";
+      c.fillRect(area.left + 6, gy - 9, tw + 12, 18);
+      c.fillStyle = "#0C5F3F";
+      c.textBaseline = "middle"; c.textAlign = "left";
+      c.fillText(txt, area.left + 12, gy);
+      c.restore();
+    },
+  };
+
   charts.velocity = new Chart(ctx, {
+    plugins: [goalLine],
     data: {
       labels,
       datasets: [
@@ -729,6 +946,7 @@ function renderAll() {
   const toTs   = parseDateInput("toDate", true);
   const filtered = filterDeals(RAW_DEALS, fromTs, toTs);
   const m = computeMetrics(filtered);
+  renderInsight(m);
   renderCards(m);
   renderStageGrid(m);
   renderFunnel(m);
