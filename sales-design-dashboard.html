@@ -366,7 +366,7 @@
         <div class="live-sub">Shipped to production</div>
       </div>
       <div class="live-item alert" id="liveStalledItem">
-        <div class="live-k">Needs a nudge</div>
+        <div class="live-k">Follow-ups overdue</div>
         <div class="live-v" id="liveStalled">—</div>
         <div class="live-sub" id="liveStalledSub">—</div>
       </div>
@@ -460,20 +460,17 @@ const GOALS = {
   approvalRate: 0.80,   // goal: 80% of Design Sent deals get approved
 };
 
-/* Max days a deal may sit in each stage before it's flagged "stalled" (needs a nudge).
-   Design Sent allows longer because that stage waits on the customer. */
-const SLA = {
-  start: 5,
-  contacted: 7,
-  sent: 14,
-};
-
-/* Dormancy cutoff. A deal with no stage movement for more than this many days is
-   treated as "dormant" and dropped from the present-tense / active view (it still
-   counts in historical funnel & velocity). This is a stand-in for the future
-   "graveyard" stage: it stops month-old-silent deals from inflating the live
-   pipeline before that stage exists. Set to null to disable and show everything. */
-const DORMANT_AFTER_DAYS = 31;
+/* Follow-up cadence & lifecycle thresholds (days).
+   - FOLLOWUP_DAYS: the designer re-contacts a deal if it's been silent this long.
+     A deal silent ≥ this many days since the last touch is "follow-up overdue".
+   - COLD_AFTER_DAYS: a deal still being chased but stuck in one stage this long is
+     flagged "cold" (graveyard-bound) — still active, just not healthy.
+   - GRAVEYARD_AFTER_DAYS: at this age a deal leaves the active pipeline (the future
+     "graveyard" stage). It still counts in historical funnel & velocity.
+   Set COLD_/GRAVEYARD_ to null to disable that tier. */
+const FOLLOWUP_DAYS = 2;
+const COLD_AFTER_DAYS = 30;
+const GRAVEYARD_AFTER_DAYS = 365;
 
 /* ---- runtime state ---- */
 let RAW_DEALS = [];     // all fetched deals (objects with properties)
@@ -538,7 +535,8 @@ function applyPipeline(pipeline) {
 
 /* Build the property list we need: core fields + hs_date_entered_<stageId>. */
 function dealProperties() {
-  const props = ["dealname", "dealstage", "createdate", "amount", "pipeline", "hs_is_closed"];
+  const props = ["dealname", "dealstage", "createdate", "amount", "pipeline", "hs_is_closed",
+                 "hs_last_activity_date", "notes_last_contacted"];
   CONFIG.stages.forEach(s => { if (s.id) props.push("hs_date_entered_" + s.id); });
   return props;
 }
@@ -751,6 +749,15 @@ function computeMetrics(deals) {
   };
 }
 
+/* Most recent time a deal was touched — HubSpot last-activity / last-contacted if
+   available, otherwise the fallback (time the current stage was entered). */
+function lastTouchTs(deal, fallbackTs) {
+  const p = deal.properties || {};
+  const cands = [p.hs_last_activity_date, p.notes_last_contacted]
+    .map(parseTs).filter(v => v != null);
+  return cands.length ? Math.max.apply(null, cands) : fallbackTs;
+}
+
 /* Present-tense snapshot — computed across ALL deals (ignores the date filter,
    since "right now" is inherently current). Drives the Pipeline-right-now strip. */
 function computeLiveState(deals) {
@@ -760,8 +767,9 @@ function computeLiveState(deals) {
   const wip = {};
   activeKeys.forEach(k => wip[k] = 0);
   let pipelineValue = 0;
-  let dormantCount = 0, dormantValue = 0;
-  const stalled = [];
+  let coldCount = 0, coldValue = 0;
+  let graveyardCount = 0, graveyardValue = 0;
+  const followups = [];   // deals overdue for a nudge (silent ≥ FOLLOWUP_DAYS)
 
   deals.forEach(d => {
     const p = d.properties || {};
@@ -777,28 +785,38 @@ function computeLiveState(deals) {
     const amt = parseFloat(p.amount) || 0;
     const daysInStage = (now - t[curKey]) / DAY_MS;
 
-    // Dormant: no movement past the cutoff → parked, excluded from the active view.
-    if (DORMANT_AFTER_DAYS != null && daysInStage > DORMANT_AFTER_DAYS) {
-      dormantCount++; dormantValue += amt;
+    // Graveyard: a year with no progress → leaves the active pipeline.
+    if (GRAVEYARD_AFTER_DAYS != null && daysInStage > GRAVEYARD_AFTER_DAYS) {
+      graveyardCount++; graveyardValue += amt;
       return;
     }
 
-    wip[curKey]++;
-    pipelineValue += amt;
+    // Warm = actively moving; cold = still chased but stuck in-stage past the cutoff.
+    // Cold is tracked separately so it doesn't inflate the headline "active" workload.
+    const cold = COLD_AFTER_DAYS != null && daysInStage > COLD_AFTER_DAYS;
+    if (cold) {
+      coldCount++; coldValue += amt;
+    } else {
+      wip[curKey]++; pipelineValue += amt;
+    }
 
-    const sla = SLA[curKey] != null ? SLA[curKey] : 14;
-    if (daysInStage > sla) {
-      stalled.push({
+    // Follow-up cadence: overdue if not touched in FOLLOWUP_DAYS (chased warm AND cold).
+    const daysSilent = (now - lastTouchTs(d, t[curKey])) / DAY_MS;
+    if (daysSilent >= FOLLOWUP_DAYS) {
+      followups.push({
         name: p.dealname || ("Deal " + d.id),
         stageLabel: CONFIG.stages[cur].label,
-        days: daysInStage, amount: amt, sla,
+        amount: amt, daysSilent, daysInStage, cold,
       });
     }
   });
 
-  stalled.sort((a, b) => b.days - a.days);
+  followups.sort((a, b) => b.daysSilent - a.daysSilent);
   const activeTotal = activeKeys.reduce((s, k) => s + wip[k], 0);
-  return { wip, activeKeys, activeTotal, pipelineValue, stalled, dormantCount, dormantValue };
+  return {
+    wip, activeKeys, activeTotal, pipelineValue, followups,
+    coldCount, coldValue, graveyardCount, graveyardValue,
+  };
 }
 
 /* ============================================================================
@@ -825,58 +843,65 @@ function renderLiveState(ls) {
   const avgDeal = ls.activeTotal ? ls.pipelineValue / ls.activeTotal : null;
   document.getElementById("liveAvgDeal").textContent = avgDeal == null ? "" : "avg " + fmtMoney(avgDeal) + " / deal";
 
-  // approved $ this month is set by renderCards' metrics; filled in renderAll via dataset
-  // Stalled alert
+  // approved $ this month is set by renderCards' metrics
+  // Follow-ups overdue (silent ≥ FOLLOWUP_DAYS) — the designer's daily chase list
   const item = document.getElementById("liveStalledItem");
   const vEl = document.getElementById("liveStalled");
   const subEl = document.getElementById("liveStalledSub");
-  const n = ls.stalled.length;
+  const fu = ls.followups;
+  const n = fu.length;
   item.classList.toggle("has-stalled", n > 0);
   item.classList.toggle("clear", n === 0);
   vEl.className = "live-v " + (n > 0 ? "warn" : "ok");
   if (n === 0) {
     vEl.textContent = "0";
-    subEl.textContent = "All active deals within SLA";
+    subEl.textContent = "All within the " + FOLLOWUP_DAYS + "-day cadence ✓";
   } else {
     vEl.textContent = String(n);
-    const worst = ls.stalled[0];
-    subEl.textContent = "longest: " + Math.round(worst.days) + "d in " + worst.stageLabel.replace("Design ", "");
+    subEl.textContent = "longest silent: " + Math.round(fu[0].daysSilent) + "d";
   }
 
-  // Stalled list (top 5)
+  // Follow-up list (top 5, most overdue first)
   const list = document.getElementById("stalledList");
   list.innerHTML = "";
   if (n === 0) {
     const row = document.createElement("div");
     row.className = "stalled-row ok";
-    row.textContent = "✓ Nothing stalled — every active design is moving within its stage SLA.";
+    row.textContent = "✓ Every active deal has been touched within the last " + FOLLOWUP_DAYS + " days.";
     list.appendChild(row);
   } else {
-    ls.stalled.slice(0, 5).forEach(s => {
-      const over = s.days - s.sla;
+    fu.slice(0, 5).forEach(s => {
       const row = document.createElement("div");
-      row.className = "stalled-row" + (over > s.sla ? " sev-high" : "");
+      row.className = "stalled-row" + (s.daysSilent >= FOLLOWUP_DAYS * 3 ? " sev-high" : "");
       row.innerHTML =
         '<span class="sr-name">' + escapeHtml(s.name) + '</span>' +
-        '<span class="sr-meta">· ' + s.stageLabel + ' · ' + fmtMoney(s.amount) + '</span>' +
-        '<span class="sr-days">' + Math.round(s.days) + 'd <span style="opacity:.7;font-weight:600">(SLA ' + s.sla + 'd)</span></span>';
+        '<span class="sr-meta">· ' + s.stageLabel + ' · ' + fmtMoney(s.amount) +
+          (s.cold ? ' · <span style="color:#ffd9b0">cold ' + Math.round(s.daysInStage) + 'd</span>' : '') + '</span>' +
+        '<span class="sr-days">' + Math.round(s.daysSilent) + 'd silent</span>';
       list.appendChild(row);
     });
     if (n > 5) {
       const more = document.createElement("div");
       more.className = "stalled-row";
-      more.innerHTML = '<span class="sr-meta">+ ' + (n - 5) + ' more stalled…</span>';
+      more.innerHTML = '<span class="sr-meta">+ ' + (n - 5) + ' more to follow up…</span>';
       list.appendChild(more);
     }
   }
 
-  // Dormant exclusion note (transparency — we say what's hidden, never hide silently)
+  // Cold / graveyard note (transparency — flag the long-haul pile, never hide silently)
   const dormEl = document.getElementById("dormantNote");
-  if (ls.dormantCount > 0 && DORMANT_AFTER_DAYS != null) {
+  const parts = [];
+  if (ls.coldCount > 0 && COLD_AFTER_DAYS != null) {
+    parts.push('<b>' + ls.coldCount + ' cold</b> (' + COLD_AFTER_DAYS + '+ days in stage, ' +
+      fmtMoney(ls.coldValue) + ') — still being chased, trending toward the graveyard');
+  }
+  if (ls.graveyardCount > 0 && GRAVEYARD_AFTER_DAYS != null) {
+    parts.push('<b>' + ls.graveyardCount + '</b> past ' + Math.round(GRAVEYARD_AFTER_DAYS / 30) +
+      ' months → moved to graveyard (' + fmtMoney(ls.graveyardValue) + ', off the active view)');
+  }
+  if (parts.length) {
     dormEl.style.display = "flex";
-    dormEl.innerHTML = '<span class="moon">☾</span><span><b>' + ls.dormantCount +
-      ' dormant</b> deal' + (ls.dormantCount === 1 ? "" : "s") + ' (no movement in ' + DORMANT_AFTER_DAYS +
-      '+ days, ' + fmtMoney(ls.dormantValue) + ') hidden from the active view — your future graveyard candidates.</span>';
+    dormEl.innerHTML = '<span class="moon">☾</span><span>' + parts.join(' · ') + '.</span>';
   } else {
     dormEl.style.display = "none";
   }
@@ -1407,11 +1432,18 @@ function makeDemoDeals() {
       }
       if (current < 0) { id++; continue; }
       props.dealstage = ids[current];
-      // Only very old abandons (90d+) are treated as already cleaned up (closed-lost). The rest
-      // stay open — the dashboard's DORMANT_AFTER_DAYS cutoff sorts those into stalled vs dormant,
-      // mirroring a pipeline that doesn't yet have a graveyard stage.
       const daysSince = (now - times[current]) / DAY_MS;
-      props.hs_is_closed = (abandonAt < 3 && current === abandonAt && daysSince > 90) ? "true" : "false";
+      const abandoned = abandonAt < 3 && current === abandonAt;
+      // Older abandoned deals are progressively more likely to have been closed-lost already;
+      // the rest stay open and become "cold" (no graveyard stage exists yet to sweep them up).
+      const closeProb = Math.max(0, Math.min(0.85, (daysSince - 35) / 130));
+      props.hs_is_closed = (abandoned && rnd() < closeProb) ? "true" : "false";
+      // Simulate the every-other-day outreach cadence: last touch skews recent, but a slice
+      // has slipped past the 2-day mark — those are the overdue follow-ups.
+      if (current < 3) {
+        const silent = Math.min(rnd() * rnd() * 6, daysSince);
+        props.hs_last_activity_date = new Date(now - silent * DAY_MS).toISOString();
+      }
       deals.push({ id: String(id), properties: props });
       id++;
     }
