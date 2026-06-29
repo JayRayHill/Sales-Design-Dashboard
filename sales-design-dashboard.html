@@ -480,8 +480,18 @@ const PIPELINE_OVERRIDE = {
     start:     "15610785",        // "Start"
     contacted: "51980918",        // "Contacted"
     sent:      "15610786",        // "Design Sent to Customer"
-    approved:  "15610787",        // "Customer Approved" (hands off to production)
+    approved:  "15610787",        // "Customer Approved" (design done)
   },
+  // The Design pipeline is the full lifecycle, so classify the OTHER stages:
+  // current dealstages that mean design is approved & the deal moved on (count as "approved"):
+  beyondApprovedStageIds: ["80718902", "175872891", "175872892", "1325395724"],
+  //   Design Sent to Manufacturer · Supplier Begins Production · Container Loaded · Closed Won
+  // extra in-progress design states (treated as early/active, bucketed with Start):
+  extraActiveStageIds: ["162588997"],                 // Design Deposit
+  // Design ReStart — rework; tracked as its OWN category (not part of the funnel/Start):
+  restartStageIds: ["1344951818"],                    // ReStart
+  // non-design stock orders living in this pipeline — excluded from design metrics:
+  stockStageIds: ["200260760", "117816099"],          // Reserve Stock · Paid Stock
 };
 
 /* HubSpot stage-entry timestamp property prefix. This portal uses the v2 naming
@@ -612,9 +622,15 @@ function applyPipeline(pipeline) {
 function dealProperties() {
   // notes_last_contacted is the confirmed "last touched" signal on this account
   // (set when a call/email/meeting is logged) — drives the follow-up cadence.
-  const props = ["dealname", "dealstage", "createdate", "amount", "pipeline", "hs_is_closed",
+  const props = ["dealname", "dealstage", "createdate", "amount", "pipeline",
                  "notes_last_contacted"];
   CONFIG.stages.forEach(s => { if (s.id) props.push(STAGE_DATE_PREFIX + s.id); });
+  // Also fetch entry dates for ReStart / Deposit so time-in-stage works for those.
+  const ov = PIPELINE_OVERRIDE;
+  if (ov) {
+    [].concat(ov.extraActiveStageIds || [], ov.restartStageIds || [])
+      .forEach(id => props.push(STAGE_DATE_PREFIX + id));
+  }
   return props;
 }
 
@@ -660,6 +676,39 @@ function dealStageTimes(deal) {
     out[s.key] = s.id ? parseTs(p[STAGE_DATE_PREFIX + s.id]) : null;
   });
   return out;
+}
+
+/* Entry timestamp for ANY stage id (incl. extra active stages like ReStart). */
+function enteredDateOf(deal, stageId) {
+  return parseTs((deal.properties || {})[STAGE_DATE_PREFIX + stageId]);
+}
+
+/* Classify a deal's CURRENT stage within the design lifecycle.
+   idx 0..3 = position in the design flow (3 = Customer Approved or beyond);
+   active = currently in-progress design work (Start / Contacted / Design Sent / ReStart / Deposit);
+   stock = a non-design stock order (excluded from design metrics). */
+function classifyCurrentStage(stageId) {
+  const i = CONFIG.stages.findIndex(s => s.id === stageId);
+  if (i >= 0) return { idx: i, active: i < 3, known: true };
+  const ov = PIPELINE_OVERRIDE;
+  if (ov) {
+    if ((ov.beyondApprovedStageIds || []).includes(stageId)) return { idx: 3, active: false, beyond: true, known: true };
+    if ((ov.restartStageIds || []).includes(stageId)) return { idx: null, active: false, restart: true, known: true };
+    if ((ov.extraActiveStageIds || []).includes(stageId)) return { idx: 0, active: true, extra: true, known: true };
+    if ((ov.stockStageIds || []).includes(stageId)) return { idx: null, active: false, stock: true, known: true };
+  }
+  return { idx: null, active: false, known: false };
+}
+
+/* Furthest design-flow index a deal reached — max of its timestamped funnel stages
+   and its current stage. Guarantees the funnel is monotonic even when deals skip stages. */
+function reachedInfo(deal) {
+  const t = dealStageTimes(deal);
+  let r = -1;
+  CONFIG.stages.forEach((s, i) => { if (t[s.key] != null) r = Math.max(r, i); });
+  const cls = classifyCurrentStage((deal.properties || {}).dealstage);
+  if (typeof cls.idx === "number") r = Math.max(r, cls.idx);
+  return { reached: r, cls: cls };
 }
 
 function monthKey(ts) {
@@ -709,15 +758,22 @@ function computeMetrics(deals) {
     const amt = parseFloat((d.properties || {}).amount) || 0;
     if (amt) amounts.push(amt);
 
+    // Avg time at each stage — only when consecutive entry timestamps both exist.
     stageKeys.forEach((k, i) => {
       if (t[k] != null) {
-        entered[k]++;
         const next = stageKeys[i + 1];
         if (next && t[next] != null && t[next] >= t[k]) {
           stageDurations[k].push((t[next] - t[k]) / DAY_MS);
         }
       }
     });
+
+    // Funnel — count by the furthest stage the deal reached (monotonic by construction),
+    // skipping non-design stock orders. Handles deals that skip stages.
+    const ri = reachedInfo(d);
+    if (!ri.cls.stock && ri.reached >= 0) {
+      for (let i = 0; i <= ri.reached; i++) entered[stageKeys[i]]++;
+    }
 
     // monthly volume by pipeline entry
     const anchor = t.start || parseTs((d.properties || {}).createdate);
@@ -846,46 +902,55 @@ function computeLiveState(deals) {
   let pipelineValue = 0;
   let coldCount = 0, coldValue = 0;
   let graveyardCount = 0, graveyardValue = 0;
+  let restartCount = 0, restartValue = 0;   // Design ReStart — rework, tracked on its own
   const followups = [];   // deals overdue for a nudge (silent ≥ FOLLOWUP_DAYS)
 
   deals.forEach(d => {
     const p = d.properties || {};
-    if (p.hs_is_closed === "true") return;      // closed-lost — left the active pipeline
-    const t = dealStageTimes(d);
-    // current stage = furthest stage with an entry timestamp
-    let cur = -1;
-    stageKeys.forEach((k, i) => { if (t[k] != null) cur = i; });
-    if (cur < 0) return;
-    const curKey = stageKeys[cur];
-    if (curKey === "approved") return;          // shipped to production — no longer active
+    // Classify the deal's CURRENT stage. (hs_is_closed is unreliable here — this
+    // pipeline flags every stage closed — so we go by the actual current stage.)
+    const cls = classifyCurrentStage(p.dealstage);
+    const isRestart = !!cls.restart;
+    // Only active design work or ReStart is "in flight"; approved/production/won/stock are not.
+    if (!cls.active && !isRestart) return;
 
     const amt = parseFloat(p.amount) || 0;
-    const daysInStage = (now - t[curKey]) / DAY_MS;
+    // Time in current stage — entry date of the actual current stage, else createdate.
+    const enteredCur = enteredDateOf(d, p.dealstage) || parseTs(p.createdate) || now;
+    const daysInStage = (now - enteredCur) / DAY_MS;
+    const daysSilent = (now - lastTouchTs(d, enteredCur)) / DAY_MS;
+    const overdue = daysSilent >= FOLLOWUP_DAYS;
 
-    // Graveyard: a year with no progress → leaves the active pipeline.
+    // Design ReStart — its own bucket. Still chased (appears in the follow-up list),
+    // but kept out of the funnel/active-stage counts.
+    if (isRestart) {
+      restartCount++; restartValue += amt;
+      if (overdue) followups.push({
+        name: p.dealname || ("Deal " + d.id),
+        stageLabel: "Design ReStart", amount: amt, daysSilent, daysInStage, cold: false, restart: true,
+      });
+      return;
+    }
+
+    const cur = cls.idx;                         // 0=Start, 1=Contacted, 2=Design Sent
+    const curKey = stageKeys[cur];
+
+    // Graveyard: a year with no progress → leaves the active view.
     if (GRAVEYARD_AFTER_DAYS != null && daysInStage > GRAVEYARD_AFTER_DAYS) {
       graveyardCount++; graveyardValue += amt;
       return;
     }
 
     // Warm = actively moving; cold = still chased but stuck in-stage past the cutoff.
-    // Cold is tracked separately so it doesn't inflate the headline "active" workload.
     const cold = COLD_AFTER_DAYS != null && daysInStage > COLD_AFTER_DAYS;
-    if (cold) {
-      coldCount++; coldValue += amt;
-    } else {
-      wip[curKey]++; pipelineValue += amt;
-    }
+    if (cold) { coldCount++; coldValue += amt; }
+    else { wip[curKey]++; pipelineValue += amt; }
 
-    // Follow-up cadence: overdue if not touched in FOLLOWUP_DAYS (chased warm AND cold).
-    const daysSilent = (now - lastTouchTs(d, t[curKey])) / DAY_MS;
-    if (daysSilent >= FOLLOWUP_DAYS) {
-      followups.push({
-        name: p.dealname || ("Deal " + d.id),
-        stageLabel: CONFIG.stages[cur].label,
-        amount: amt, daysSilent, daysInStage, cold,
-      });
-    }
+    if (overdue) followups.push({
+      name: p.dealname || ("Deal " + d.id),
+      stageLabel: CONFIG.stages[cur].label,
+      amount: amt, daysSilent, daysInStage, cold,
+    });
   });
 
   followups.sort((a, b) => b.daysSilent - a.daysSilent);
@@ -893,6 +958,7 @@ function computeLiveState(deals) {
   return {
     wip, activeKeys, activeTotal, pipelineValue, followups,
     coldCount, coldValue, graveyardCount, graveyardValue,
+    restartCount, restartValue,
   };
 }
 
@@ -965,9 +1031,13 @@ function renderLiveState(ls) {
     }
   }
 
-  // Cold / graveyard note (transparency — flag the long-haul pile, never hide silently)
+  // Cold / ReStart / graveyard note (transparency — flag these piles, never hide silently)
   const dormEl = document.getElementById("dormantNote");
   const parts = [];
+  if (ls.restartCount > 0) {
+    parts.push('🔄 <b>' + ls.restartCount + ' in Design ReStart</b> (' + fmtMoney(ls.restartValue) +
+      ') — rework, tracked separately');
+  }
   if (ls.coldCount > 0 && COLD_AFTER_DAYS != null) {
     parts.push('<b>' + ls.coldCount + ' cold</b> (' + COLD_AFTER_DAYS + '+ days in stage, ' +
       fmtMoney(ls.coldValue) + ') — still being chased, trending toward the graveyard');
