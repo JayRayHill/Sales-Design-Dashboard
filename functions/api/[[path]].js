@@ -77,10 +77,9 @@ export async function onRequest(context) {
         { headers: { "Authorization": "Bearer " + token } });
       out.dealReadStatus = rd.status;
       const jd = await rd.json();
-      // only show the timestamp props that came back populated
+      // report only the timestamp property NAMES that came back populated (no values/PII)
       const p = jd.properties || {};
       out.populatedTimestampProps = Object.keys(p).filter(k => /date_entered/.test(k) && p[k]);
-      out.dealReadProps = p;
     } catch (e) { out.dealReadError = String((e && e.message) || e); }
 
     return json(out, 200);

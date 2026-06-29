@@ -427,7 +427,7 @@
   </div>
 
   <div class="footnote">
-    Timestamps sourced from deal <code>hs_date_entered_[stage_id]</code> properties · HubSpot CRM API v3
+    Timestamps sourced from deal stage-entry properties (<code>hs_v2_date_entered_[stage_id]</code>) · HubSpot CRM API v3
   </div>
 
 </div>
@@ -483,6 +483,11 @@ const PIPELINE_OVERRIDE = {
     approved:  "15610787",        // "Customer Approved" (hands off to production)
   },
 };
+
+/* HubSpot stage-entry timestamp property prefix. This portal uses the v2 naming
+   ("hs_v2_date_entered_<stageId>"); some portals use the older "hs_date_entered_".
+   If charts come back empty, check which exists for your deals and switch this. */
+const STAGE_DATE_PREFIX = "hs_v2_date_entered_";
 
 const MONTH_START = new Date(2026, 0, 1); // trend window begins Jan 2026
 
@@ -609,7 +614,7 @@ function dealProperties() {
   // (set when a call/email/meeting is logged) — drives the follow-up cadence.
   const props = ["dealname", "dealstage", "createdate", "amount", "pipeline", "hs_is_closed",
                  "notes_last_contacted"];
-  CONFIG.stages.forEach(s => { if (s.id) props.push("hs_date_entered_" + s.id); });
+  CONFIG.stages.forEach(s => { if (s.id) props.push(STAGE_DATE_PREFIX + s.id); });
   return props;
 }
 
@@ -652,7 +657,7 @@ function dealStageTimes(deal) {
   const p = deal.properties || {};
   const out = {};
   CONFIG.stages.forEach(s => {
-    out[s.key] = s.id ? parseTs(p["hs_date_entered_" + s.id]) : null;
+    out[s.key] = s.id ? parseTs(p[STAGE_DATE_PREFIX + s.id]) : null;
   });
   return out;
 }
@@ -1505,7 +1510,7 @@ function makeDemoDeals() {
       let current = -1;
       for (let s = 0; s <= abandonAt; s++) {
         if (times[s] <= now) {
-          props["hs_date_entered_" + ids[s]] = new Date(times[s]).toISOString();
+          props[STAGE_DATE_PREFIX + ids[s]] = new Date(times[s]).toISOString();
           current = s;
         } else break;
       }
