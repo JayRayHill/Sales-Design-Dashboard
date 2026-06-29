@@ -468,6 +468,22 @@ const CONFIG = {
   ],
 };
 
+/* Pinned mapping for the Frozen Desserts Supplies "Design" pipeline. With this set,
+   the dashboard uses these exact stage IDs instead of guessing by stage label
+   (your stage names — "Start", "Customer Approved" — don't match the generic
+   defaults, and the pipeline has other stages containing "start"/"sent", so
+   name-matching would be unreliable). To use a different pipeline, change the id
+   and the four stage IDs, or set PIPELINE_OVERRIDE = null to fall back to guessing. */
+const PIPELINE_OVERRIDE = {
+  id: "4855431",                  // "Design" pipeline
+  stages: {
+    start:     "15610785",        // "Start"
+    contacted: "51980918",        // "Contacted"
+    sent:      "15610786",        // "Design Sent to Customer"
+    approved:  "15610787",        // "Customer Approved" (hands off to production)
+  },
+};
+
 const MONTH_START = new Date(2026, 0, 1); // trend window begins Jan 2026
 
 /* Targets used for benchmark lines & card goal context. Adjust to your team's SLAs. */
@@ -529,12 +545,25 @@ async function fetchPipelines() {
   return data.results || [];
 }
 
-/* Map the chosen pipeline's stages into CONFIG by label, falling back to order. */
+/* Map the chosen pipeline's stages into CONFIG. Uses PIPELINE_OVERRIDE for an
+   exact, pinned mapping when the chosen pipeline matches; otherwise guesses by
+   label and falls back to order. */
 function applyPipeline(pipeline) {
   CONFIG.pipelineId = pipeline.id;
   const stages = (pipeline.stages || []).slice().sort(
     (a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0)
   );
+
+  // Pinned mapping wins when the pipeline matches the override.
+  if (PIPELINE_OVERRIDE && PIPELINE_OVERRIDE.id === pipeline.id) {
+    CONFIG.stages.forEach(cfg => {
+      cfg.id = PIPELINE_OVERRIDE.stages[cfg.key] || null;
+      const match = stages.find(s => s.id === cfg.id);
+      if (match && match.label) cfg.label = match.label;   // show the real HubSpot label
+    });
+    return CONFIG.stages.every(s => s.id);
+  }
+
   // Try label matching first.
   CONFIG.stages.forEach(cfg => { cfg.id = null; });
   CONFIG.stages.forEach(cfg => {
@@ -556,8 +585,10 @@ function applyPipeline(pipeline) {
 
 /* Build the property list we need: core fields + hs_date_entered_<stageId>. */
 function dealProperties() {
+  // notes_last_contacted is the confirmed "last touched" signal on this account
+  // (set when a call/email/meeting is logged) — drives the follow-up cadence.
   const props = ["dealname", "dealstage", "createdate", "amount", "pipeline", "hs_is_closed",
-                 "hs_last_activity_date", "notes_last_contacted"];
+                 "notes_last_contacted"];
   CONFIG.stages.forEach(s => { if (s.id) props.push("hs_date_entered_" + s.id); });
   return props;
 }
@@ -1339,8 +1370,9 @@ async function loadPipelinesIntoSelect() {
       opt.dataset.pipeline = JSON.stringify(p);
       sel.appendChild(opt);
     });
-    // Auto-select a likely "sales design" pipeline
-    const guess = pipelines.find(p => /design/i.test(p.label)) || pipelines[0];
+    // Auto-select the pinned pipeline, else a likely "design" one.
+    const guess = (PIPELINE_OVERRIDE && pipelines.find(p => p.id === PIPELINE_OVERRIDE.id))
+      || pipelines.find(p => /design/i.test(p.label)) || pipelines[0];
     if (guess) sel.value = guess.id;
     setLoading(false);
     return pipelines;
@@ -1463,7 +1495,7 @@ function makeDemoDeals() {
       // has slipped past the 2-day mark — those are the overdue follow-ups.
       if (current < 3) {
         const silent = Math.min(rnd() * rnd() * 6, daysSince);
-        props.hs_last_activity_date = new Date(now - silent * DAY_MS).toISOString();
+        props.notes_last_contacted = new Date(now - silent * DAY_MS).toISOString();
       }
       deals.push({ id: String(id), properties: props });
       id++;
