@@ -519,12 +519,14 @@ const GOALS = {
      A deal silent ≥ this many days since the last touch is "follow-up overdue".
    - COLD_AFTER_DAYS: a deal still being chased but stuck in one stage this long is
      flagged "cold" (graveyard-bound) — still active, just not healthy.
-   - GRAVEYARD_AFTER_DAYS: at this age a deal leaves the active pipeline (the future
-     "graveyard" stage). It still counts in historical funnel & velocity.
+   - GRAVEYARD_AFTER_DAYS: time-based auto-graveyard. Disabled (null) — the pipeline
+     now has a real Graveyard stage, which is the ONLY thing that removes a deal
+     from follow-up. Old-but-active deals stay "cold" and keep getting chased until
+     they're manually moved to the Graveyard.
    Set COLD_/GRAVEYARD_ to null to disable that tier. */
 const FOLLOWUP_DAYS = 2;
 const COLD_AFTER_DAYS = 30;
-const GRAVEYARD_AFTER_DAYS = 365;
+const GRAVEYARD_AFTER_DAYS = null;
 
 /* ---- runtime state ---- */
 let RAW_DEALS = [];     // all fetched deals (objects with properties)
