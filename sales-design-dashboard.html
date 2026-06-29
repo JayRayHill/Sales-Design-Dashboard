@@ -207,7 +207,8 @@
     font-size: 12.5px;
   }
   .stalled-row.sev-high { border-left-color: var(--sales-red); }
-  .stalled-row .sr-name { font-weight: 700; color: #fff; }
+  .stalled-row .sr-name { font-weight: 700; color: #fff; text-decoration: none; }
+  a.sr-name:hover { text-decoration: underline; color: var(--orange-light); }
   .stalled-row .sr-meta { color: rgba(255,255,255,.72); }
   .stalled-row .sr-days { margin-left: auto; font-weight: 700; color: #ffb3a6; white-space: nowrap; }
   .stalled-row.ok { border-left-color: var(--green-light); color: var(--green-light); }
@@ -458,6 +459,7 @@
 const PROXY_BASE    = "/api";                          // "" to call HubSpot directly
 const HUBSPOT_TOKEN = "";                              // only used in DIRECT mode
 const HUBSPOT_BASE  = "https://api.hubapi.com";
+const PORTAL_ID     = "21466193";                      // for deep-links to deal records in HubSpot
 
 /* The four logical stages of the sales design pipeline, in order.
    Stage IDs are resolved at runtime from the chosen pipeline and stored here. */
@@ -1006,7 +1008,7 @@ function computeLiveState(deals) {
     if (isRestart) {
       restartCount++; restartValue += amt;
       if (due) followups.push({
-        name: p.dealname || ("Deal " + d.id),
+        id: d.id, name: p.dealname || ("Deal " + d.id),
         stageLabel: "Design ReStart", amount: amt, daysSilent, daysInStage, cold: false, restart: true,
       });
       return;
@@ -1027,7 +1029,7 @@ function computeLiveState(deals) {
     else { wip[curKey]++; pipelineValue += amt; }
 
     if (due) followups.push({
-      name: p.dealname || ("Deal " + d.id),
+      id: d.id, name: p.dealname || ("Deal " + d.id),
       stageLabel: CONFIG.stages[cur].label,
       amount: amt, daysSilent, daysInStage, cold,
     });
@@ -1090,8 +1092,12 @@ function renderLiveState(ls) {
   const makeRow = (s) => {
     const row = document.createElement("div");
     row.className = "stalled-row" + (s.daysSilent >= FOLLOWUP_DAYS * 3 ? " sev-high" : "");
+    const nameHtml = s.id
+      ? '<a class="sr-name" href="https://app.hubspot.com/contacts/' + PORTAL_ID + '/record/0-3/' +
+          encodeURIComponent(s.id) + '" target="_blank" rel="noopener">' + escapeHtml(s.name) + ' ↗</a>'
+      : '<span class="sr-name">' + escapeHtml(s.name) + '</span>';
     row.innerHTML =
-      '<span class="sr-name">' + escapeHtml(s.name) + '</span>' +
+      nameHtml +
       '<span class="sr-meta">· ' + s.stageLabel + ' · ' + fmtMoney(s.amount) +
         (s.restart ? ' · <span style="color:#bcd9ff">rework</span>' : '') +
         (s.cold ? ' · <span style="color:#ffd9b0">cold ' + Math.round(s.daysInStage) + 'd</span>' : '') + '</span>' +
