@@ -494,6 +494,9 @@ const PIPELINE_OVERRIDE = {
   extraActiveStageIds: ["162588997"],                 // Design Deposit
   // Design ReStart — rework; tracked as its OWN category (not part of the funnel/Start):
   restartStageIds: ["1344951818"],                    // ReStart
+  // Graveyard — dead deals. They count as drop-off in the funnel (reached their
+  // furthest stage, then died) but are excluded from active and approved:
+  graveyardStageIds: ["1391114905"],                  // Graveyard
   // non-design stock orders living in this pipeline — excluded from design metrics:
   stockStageIds: ["200260760", "117816099"],          // Reserve Stock · Paid Stock
 };
@@ -745,6 +748,7 @@ function classifyCurrentStage(stageId) {
   const ov = PIPELINE_OVERRIDE;
   if (ov) {
     if ((ov.beyondApprovedStageIds || []).includes(stageId)) return { idx: 3, active: false, beyond: true, known: true };
+    if ((ov.graveyardStageIds || []).includes(stageId)) return { idx: null, active: false, dead: true, known: true };
     if ((ov.restartStageIds || []).includes(stageId)) return { idx: null, active: false, restart: true, known: true };
     if ((ov.extraActiveStageIds || []).includes(stageId)) return { idx: 0, active: true, extra: true, known: true };
     if ((ov.stockStageIds || []).includes(stageId)) return { idx: null, active: false, stock: true, known: true };
@@ -964,6 +968,8 @@ function computeLiveState(deals) {
     // Classify the deal's CURRENT stage. (hs_is_closed is unreliable here — this
     // pipeline flags every stage closed — so we go by the actual current stage.)
     const cls = classifyCurrentStage(p.dealstage);
+    // Deals moved to the real Graveyard stage — dead, off the active view.
+    if (cls.dead) { graveyardCount++; graveyardValue += parseFloat(p.amount) || 0; return; }
     const isRestart = !!cls.restart;
     // Only active design work or ReStart is "in flight"; approved/production/won/stock are not.
     if (!cls.active && !isRestart) return;
@@ -1115,9 +1121,9 @@ function renderLiveState(ls) {
     parts.push('<b>' + ls.coldCount + ' cold</b> (' + COLD_AFTER_DAYS + '+ days in stage, ' +
       fmtMoney(ls.coldValue) + ') — still being chased, trending toward the graveyard');
   }
-  if (ls.graveyardCount > 0 && GRAVEYARD_AFTER_DAYS != null) {
-    parts.push('<b>' + ls.graveyardCount + '</b> past ' + Math.round(GRAVEYARD_AFTER_DAYS / 30) +
-      ' months → moved to graveyard (' + fmtMoney(ls.graveyardValue) + ', off the active view)');
+  if (ls.graveyardCount > 0) {
+    parts.push('<b>' + ls.graveyardCount + ' in the graveyard</b> (' +
+      fmtMoney(ls.graveyardValue) + ', dead — off the active view)');
   }
   if (parts.length) {
     dormEl.style.display = "flex";
