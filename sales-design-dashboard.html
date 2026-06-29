@@ -212,6 +212,10 @@
   .stalled-row .sr-meta { color: rgba(255,255,255,.72); }
   .stalled-row .sr-days { margin-left: auto; font-weight: 700; color: #ffb3a6; white-space: nowrap; }
   .stalled-row.ok { border-left-color: var(--green-light); color: var(--green-light); }
+  .stalled-extra { flex-direction: column; gap: 7px; margin-top: 7px; }
+  .stalled-row.toggle { cursor: pointer; border-left-color: transparent; background: rgba(255,255,255,.07); justify-content: center; }
+  .stalled-row.toggle:hover { background: rgba(255,255,255,.12); }
+  .stalled-row.toggle .sr-meta { color: rgba(255,255,255,.9); font-weight: 700; }
   .dormant-note { margin-top: 12px; font-size: 12px; color: rgba(255,255,255,.62); display: flex; align-items: center; gap: 8px; }
   .dormant-note .moon { font-size: 13px; opacity: .8; }
   .dormant-note b { color: rgba(255,255,255,.85); font-weight: 700; }
@@ -1007,27 +1011,46 @@ function renderLiveState(ls) {
   // Follow-up list (top 5, most overdue first)
   const list = document.getElementById("stalledList");
   list.innerHTML = "";
+  const makeRow = (s) => {
+    const row = document.createElement("div");
+    row.className = "stalled-row" + (s.daysSilent >= FOLLOWUP_DAYS * 3 ? " sev-high" : "");
+    row.innerHTML =
+      '<span class="sr-name">' + escapeHtml(s.name) + '</span>' +
+      '<span class="sr-meta">· ' + s.stageLabel + ' · ' + fmtMoney(s.amount) +
+        (s.restart ? ' · <span style="color:#bcd9ff">rework</span>' : '') +
+        (s.cold ? ' · <span style="color:#ffd9b0">cold ' + Math.round(s.daysInStage) + 'd</span>' : '') + '</span>' +
+      '<span class="sr-days">' + Math.round(s.daysSilent) + 'd silent</span>';
+    return row;
+  };
+
   if (n === 0) {
     const row = document.createElement("div");
     row.className = "stalled-row ok";
     row.textContent = "✓ Every active deal has been touched within the last " + FOLLOWUP_DAYS + " days.";
     list.appendChild(row);
   } else {
-    fu.slice(0, 5).forEach(s => {
-      const row = document.createElement("div");
-      row.className = "stalled-row" + (s.daysSilent >= FOLLOWUP_DAYS * 3 ? " sev-high" : "");
-      row.innerHTML =
-        '<span class="sr-name">' + escapeHtml(s.name) + '</span>' +
-        '<span class="sr-meta">· ' + s.stageLabel + ' · ' + fmtMoney(s.amount) +
-          (s.cold ? ' · <span style="color:#ffd9b0">cold ' + Math.round(s.daysInStage) + 'd</span>' : '') + '</span>' +
-        '<span class="sr-days">' + Math.round(s.daysSilent) + 'd silent</span>';
-      list.appendChild(row);
-    });
-    if (n > 5) {
-      const more = document.createElement("div");
-      more.className = "stalled-row";
-      more.innerHTML = '<span class="sr-meta">+ ' + (n - 5) + ' more to follow up…</span>';
-      list.appendChild(more);
+    const SHOWN = 5;
+    fu.slice(0, SHOWN).forEach(s => list.appendChild(makeRow(s)));
+    if (n > SHOWN) {
+      const extra = document.createElement("div");
+      extra.className = "stalled-extra";
+      extra.style.display = "none";
+      fu.slice(SHOWN).forEach(s => extra.appendChild(makeRow(s)));
+
+      const toggle = document.createElement("div");
+      toggle.className = "stalled-row toggle";
+      const setLabel = (open) => {
+        toggle.innerHTML = '<span class="sr-meta">' +
+          (open ? "▴ Show fewer" : "▾ Show " + (n - SHOWN) + " more to follow up") + "</span>";
+      };
+      setLabel(false);
+      toggle.addEventListener("click", () => {
+        const open = extra.style.display === "none";
+        extra.style.display = open ? "flex" : "none";
+        setLabel(open);
+      });
+      list.appendChild(toggle);
+      list.appendChild(extra);
     }
   }
 
