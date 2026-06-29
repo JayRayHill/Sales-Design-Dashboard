@@ -55,27 +55,33 @@ export async function onRequest(context) {
       out.hubspotPipelinesStatus = r.status;
     } catch (e) { out.hubspotPipelinesStatus = "fetch-failed: " + ((e && e.message) || e); }
 
-    // Pull 2 real Design-pipeline deals with the exact stage-timestamp props the
-    // dashboard uses, and return their raw properties so we can see what's populated.
+    // 1) Real stages of the Design pipeline (confirm IDs + order).
     try {
-      const body = JSON.stringify({
-        filterGroups: [{ filters: [{ propertyName: "pipeline", operator: "EQ", value: "4855431" }] }],
-        properties: ["dealname", "dealstage", "createdate", "amount",
-          "hs_date_entered_15610785", "hs_date_entered_51980918",
-          "hs_date_entered_15610786", "hs_date_entered_15610787", "notes_last_contacted"],
-        limit: 2,
-        sorts: [{ propertyName: "hs_lastmodifieddate", direction: "DESCENDING" }],
+      const rp = await fetch("https://api.hubapi.com/crm/v3/pipelines/deals/4855431", {
+        headers: { "Authorization": "Bearer " + token },
       });
-      const r2 = await fetch("https://api.hubapi.com/crm/v3/objects/deals/search", {
-        method: "POST",
-        headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
-        body,
-      });
-      out.dealSearchStatus = r2.status;
-      const j = await r2.json();
-      out.dealTotal = j.total;
-      out.sampleDeals = (j.results || []).map(d => d.properties);
-    } catch (e) { out.dealSearchStatus = "fetch-failed: " + ((e && e.message) || e); }
+      const jp = await rp.json();
+      out.designStages = (jp.stages || [])
+        .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
+        .map(s => ({ id: s.id, label: s.label, order: s.displayOrder }));
+    } catch (e) { out.designStagesError = String((e && e.message) || e); }
+
+    // 2) On a real deal currently in "Design Sent" (15610786), test both timestamp
+    //    naming variants for the candidate stage IDs to see which actually carries data.
+    try {
+      const ids = ["15610785", "51980918", "15610786", "15610787"];
+      const props = ["dealstage", "createdate"];
+      ids.forEach(id => { props.push("hs_date_entered_" + id, "hs_v2_date_entered_" + id); });
+      const rd = await fetch(
+        "https://api.hubapi.com/crm/v3/objects/deals/61625429352?properties=" + props.join(","),
+        { headers: { "Authorization": "Bearer " + token } });
+      out.dealReadStatus = rd.status;
+      const jd = await rd.json();
+      // only show the timestamp props that came back populated
+      const p = jd.properties || {};
+      out.populatedTimestampProps = Object.keys(p).filter(k => /date_entered/.test(k) && p[k]);
+      out.dealReadProps = p;
+    } catch (e) { out.dealReadError = String((e && e.message) || e); }
 
     return json(out, 200);
   }
