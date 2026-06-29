@@ -434,10 +434,26 @@
 
 <script>
 /* ============================================================================
-   CONFIG — swap the token here. Use a HubSpot Private App token with
-   crm.objects.deals.read and crm.schemas.deals.read scopes.
+   CONNECTION
+   ----------------------------------------------------------------------------
+   Two ways to reach HubSpot:
+
+   1. PROXY MODE (recommended — used on Cloudflare Pages).
+      Leave PROXY_BASE = "/api". A Cloudflare Pages Function (functions/api/
+      [[path]].js) forwards calls to HubSpot and adds the token from a server-
+      side secret (HUBSPOT_TOKEN). The token NEVER reaches the browser, and
+      there are no CORS problems. This is the default.
+
+   2. DIRECT MODE (local testing only — exposes the token in the page).
+      Set PROXY_BASE = "" and put a Private App token in HUBSPOT_TOKEN below.
+      Note: browsers block direct calls to api.hubapi.com (CORS), so this
+      generally only works from a non-browser context.
+
+   Opened as a local file with neither configured, the dashboard simply shows
+   demo data.
    ========================================================================== */
-const HUBSPOT_TOKEN = "pat-na1-XXXXXXXX-REPLACE-ME";   // <-- Private App token
+const PROXY_BASE    = "/api";                          // "" to call HubSpot directly
+const HUBSPOT_TOKEN = "";                              // only used in DIRECT mode
 const HUBSPOT_BASE  = "https://api.hubapi.com";
 
 /* The four logical stages of the sales design pipeline, in order.
@@ -479,21 +495,26 @@ let charts = { funnel: null, velocity: null };
 /* ============================================================================
    HubSpot API helpers
    ========================================================================== */
+function apiUrl(path) {
+  // Proxy mode → same-origin "/api/..."; direct mode → HubSpot host.
+  return PROXY_BASE ? (PROXY_BASE + path) : (HUBSPOT_BASE + path);
+}
+
 function authHeaders() {
-  return {
-    "Authorization": "Bearer " + HUBSPOT_TOKEN,
-    "Content-Type": "application/json",
-  };
+  const h = { "Content-Type": "application/json" };
+  // In proxy mode the Cloudflare Function injects the token server-side.
+  if (!PROXY_BASE) h["Authorization"] = "Bearer " + HUBSPOT_TOKEN;
+  return h;
 }
 
 async function hsGet(path) {
-  const res = await fetch(HUBSPOT_BASE + path, { headers: authHeaders() });
+  const res = await fetch(apiUrl(path), { headers: authHeaders() });
   if (!res.ok) throw new Error("GET " + path + " → " + res.status + " " + res.statusText);
   return res.json();
 }
 
 async function hsPost(path, body) {
-  const res = await fetch(HUBSPOT_BASE + path, {
+  const res = await fetch(apiUrl(path), {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify(body),
@@ -1359,10 +1380,10 @@ async function loadDealsAndRender() {
     renderAll();
   } catch (e) {
     setLoading(false);
-    banner("err", "Could not fetch live deals (<code>" + escapeHtml(e.message) + "</code>). "
-      + "Showing <strong>demo data</strong> so you can preview the dashboard. "
-      + "Browsers block direct HubSpot API calls via CORS — serve this through a small proxy "
-      + "or run it from a backend, and set a valid token in <code>HUBSPOT_TOKEN</code>.");
+    const hint = PROXY_BASE
+      ? "Showing <strong>demo data</strong>. Live data loads when this is deployed to Cloudflare Pages with the <code>HUBSPOT_TOKEN</code> secret set (the <code>" + escapeHtml(PROXY_BASE) + "</code> proxy isn't reachable here)."
+      : "Showing <strong>demo data</strong>. Browsers block direct HubSpot calls via CORS — use the Cloudflare proxy (set <code>PROXY_BASE = \"/api\"</code>) or a backend.";
+    banner("err", "Could not fetch live deals (<code>" + escapeHtml(e.message) + "</code>). " + hint);
     RAW_DEALS = makeDemoDeals();
     renderAll();
   }
@@ -1475,20 +1496,22 @@ async function boot() {
     await loadDealsAndRender();
   });
 
-  const tokenLooksReal = HUBSPOT_TOKEN && !/REPLACE-ME|XXXX/.test(HUBSPOT_TOKEN);
+  const configured = PROXY_BASE || (HUBSPOT_TOKEN && !/REPLACE-ME|XXXX/.test(HUBSPOT_TOKEN));
 
   try {
     await loadPipelinesIntoSelect();
     await onPipelineChosen();
     await loadDealsAndRender();
   } catch (e) {
-    // Pipelines couldn't load (bad token / CORS) — fall back to demo.
-    if (!tokenLooksReal) {
-      banner("info", "No valid HubSpot token set yet. Showing <strong>demo data</strong>. "
-        + "Set <code>HUBSPOT_TOKEN</code> at the top of this file to connect live data.");
+    // Pipelines couldn't load (running locally, or secret not set) — fall back to demo.
+    if (!configured) {
+      banner("info", "Not connected to HubSpot yet. Showing <strong>demo data</strong>. "
+        + "Deploy to Cloudflare Pages with the <code>HUBSPOT_TOKEN</code> secret (proxy mode), "
+        + "or set <code>PROXY_BASE</code>/<code>HUBSPOT_TOKEN</code> at the top of this file.");
     } else {
-      banner("err", "Could not reach HubSpot (<code>" + escapeHtml(e.message) + "</code>). "
-        + "Showing demo data. Direct browser calls are often blocked by CORS — use a proxy/backend.");
+      banner("info", "Showing <strong>demo data</strong> — the live API isn't reachable from here "
+        + "(<code>" + escapeHtml(e.message) + "</code>). On Cloudflare with the <code>HUBSPOT_TOKEN</code> "
+        + "secret set, this loads your real deals.");
     }
     RAW_DEALS = makeDemoDeals();
     renderAll();
