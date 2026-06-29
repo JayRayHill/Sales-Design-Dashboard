@@ -44,6 +44,26 @@ export async function onRequest(context) {
   const segments = Array.isArray(params.path) ? params.path : (params.path ? [params.path] : []);
   const subPath = segments.join("/");
 
+  // Diagnostic: live-test the token against HubSpot, server-side (no browser cache).
+  // Reports token SHAPE only (prefix + length), never the value.
+  if (subPath === "_diag") {
+    let status = "n/a", body = "";
+    try {
+      const r = await fetch("https://api.hubapi.com/crm/v3/pipelines/deals", {
+        headers: { "Authorization": "Bearer " + token },
+      });
+      status = r.status;
+      body = (await r.text()).slice(0, 200);
+    } catch (e) { status = "fetch-failed"; body = String((e && e.message) || e); }
+    return json({
+      tokenPrefix: token.slice(0, 8),
+      tokenLength: token.length,
+      looksLikePat: token.startsWith("pat-"),
+      hubspotPipelinesStatus: status,
+      hubspotBody: body,
+    }, 200);
+  }
+
   if (!ALLOWED.some((re) => re.test(subPath))) {
     return json({ error: "Endpoint not allowed by proxy: " + subPath }, 403);
   }
