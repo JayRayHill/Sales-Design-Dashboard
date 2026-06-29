@@ -172,6 +172,62 @@
   .insight-text b { color: var(--green); font-weight: 700; }
   .insight-text .hot { color: var(--orange-darkest); font-weight: 700; }
 
+  /* Pipeline right now */
+  .livewrap {
+    background: var(--green-darkest);
+    color: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px 18px 18px;
+    margin-bottom: 22px;
+  }
+  .live-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+  .live-title { font-family: var(--font-heading); font-weight: 600; font-size: 16px; color: #fff; letter-spacing: -.01em; }
+  .live-asof { font-size: 11.5px; color: rgba(255,255,255,.6); }
+  .livestrip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .live-item {
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.10);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .live-item.alert.has-stalled { background: rgba(250,56,56,.16); border-color: rgba(250,56,56,.5); }
+  .live-item.alert.clear { background: rgba(137,204,164,.16); border-color: rgba(137,204,164,.45); }
+  .live-k { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: rgba(255,255,255,.66); font-weight: 600; }
+  .live-v { font-family: var(--font-heading); font-size: 26px; font-weight: 600; margin-top: 6px; color: #fff; line-height: 1.1; }
+  .live-v.warn { color: #ffb3a6; }
+  .live-v.ok { color: var(--green-light); }
+  .live-sub { font-size: 11.5px; color: rgba(255,255,255,.7); margin-top: 4px; }
+  .stalled-list { margin-top: 14px; display: flex; flex-direction: column; gap: 7px; }
+  .stalled-row {
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(255,255,255,.05);
+    border-left: 3px solid var(--orange);
+    border-radius: 7px;
+    padding: 8px 12px;
+    font-size: 12.5px;
+  }
+  .stalled-row.sev-high { border-left-color: var(--sales-red); }
+  .stalled-row .sr-name { font-weight: 700; color: #fff; }
+  .stalled-row .sr-meta { color: rgba(255,255,255,.72); }
+  .stalled-row .sr-days { margin-left: auto; font-weight: 700; color: #ffb3a6; white-space: nowrap; }
+  .stalled-row.ok { border-left-color: var(--green-light); color: var(--green-light); }
+  .dormant-note { margin-top: 12px; font-size: 12px; color: rgba(255,255,255,.62); display: flex; align-items: center; gap: 8px; }
+  .dormant-note .moon { font-size: 13px; opacity: .8; }
+  .dormant-note b { color: rgba(255,255,255,.85); font-weight: 700; }
+
+  /* Internal vs customer split bar */
+  .splitbar { display: flex; height: 38px; border-radius: 9px; overflow: hidden; background: var(--gray-light); }
+  .splitbar .seg { display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12.5px; font-weight: 700; min-width: 2px; transition: width .4s ease; white-space: nowrap; }
+  .splitbar .seg.internal { background: var(--green); }
+  .splitbar .seg.customer { background: var(--blue); color: var(--green-darkest); }
+  .split-legend { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 12px; }
+  .split-legend .lg { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink); }
+  .split-legend .sw { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+  .split-legend .sw.internal { background: var(--green); }
+  .split-legend .sw.customer { background: var(--blue); }
+  .split-legend b { font-weight: 700; }
+
   /* Goal progress bar inside KPI cards */
   .goalbar { position: relative; height: 5px; border-radius: 999px; background: var(--gray-light); margin: 10px 0 8px; overflow: hidden; }
   .goalbar-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: var(--green); transition: width .4s ease; }
@@ -232,10 +288,12 @@
   @media (max-width: 860px) {
     .cards { grid-template-columns: repeat(2, 1fr); }
     .stage-grid { grid-template-columns: repeat(2, 1fr); }
+    .livestrip { grid-template-columns: repeat(2, 1fr); }
   }
   @media (max-width: 520px) {
     .cards { grid-template-columns: 1fr; }
     .stage-grid { grid-template-columns: 1fr; }
+    .livestrip { grid-template-columns: 1fr; }
     .controls { gap: 10px; }
     .field input, .field select { min-width: 120px; width: 100%; }
     .field { flex: 1 1 140px; }
@@ -285,6 +343,38 @@
     <span class="insight-text" id="insightText"></span>
   </div>
 
+  <!-- Pipeline right now: present-tense operational snapshot -->
+  <section class="livewrap" id="livewrap">
+    <div class="live-head">
+      <span class="live-title">Pipeline right now</span>
+      <span class="live-asof" id="liveAsOf"></span>
+    </div>
+    <div class="livestrip">
+      <div class="live-item">
+        <div class="live-k">Active designs</div>
+        <div class="live-v" id="liveActive">—</div>
+        <div class="live-sub" id="liveWip">—</div>
+      </div>
+      <div class="live-item">
+        <div class="live-k">Value in pipeline</div>
+        <div class="live-v" id="livePipeValue">—</div>
+        <div class="live-sub" id="liveAvgDeal">—</div>
+      </div>
+      <div class="live-item">
+        <div class="live-k">Approved this month</div>
+        <div class="live-v" id="liveApprovedValue">—</div>
+        <div class="live-sub">Shipped to production</div>
+      </div>
+      <div class="live-item alert" id="liveStalledItem">
+        <div class="live-k">Needs a nudge</div>
+        <div class="live-v" id="liveStalled">—</div>
+        <div class="live-sub" id="liveStalledSub">—</div>
+      </div>
+    </div>
+    <div class="stalled-list" id="stalledList"></div>
+    <div class="dormant-note" id="dormantNote" style="display:none;"></div>
+  </section>
+
   <!-- Stat cards -->
   <div class="cards">
     <div class="card">
@@ -317,6 +407,15 @@
     <p class="desc">Deals entering each stage vs. advancing to the next — drop-off % is shown beside each bar, and the slowest stage is flagged as the bottleneck below.</p>
     <div class="chart-box"><canvas id="funnelChart"></canvas></div>
     <div class="stage-grid" id="stageGrid"></div>
+  </div>
+
+  <!-- Internal vs customer time split -->
+  <div class="panel">
+    <h2>Where the time goes — your team vs. the customer</h2>
+    <p class="desc">Average time to approval, split into the work your team controls (Design Start → Sent) and the wait on the customer to approve (Sent → Approved). Tells you whether a slowdown is a design problem or a follow-up problem.</p>
+    <div class="splitbar" id="splitBar"></div>
+    <div class="split-legend" id="splitLegend"></div>
+    <div class="footnote" id="splitFoot" style="text-align:left;margin-top:12px;"></div>
   </div>
 
   <!-- Monthly velocity -->
@@ -360,6 +459,21 @@ const GOALS = {
   daysToApproval: 14,   // goal: Design Start → Approved in ≤ 14 days
   approvalRate: 0.80,   // goal: 80% of Design Sent deals get approved
 };
+
+/* Max days a deal may sit in each stage before it's flagged "stalled" (needs a nudge).
+   Design Sent allows longer because that stage waits on the customer. */
+const SLA = {
+  start: 5,
+  contacted: 7,
+  sent: 14,
+};
+
+/* Dormancy cutoff. A deal with no stage movement for more than this many days is
+   treated as "dormant" and dropped from the present-tense / active view (it still
+   counts in historical funnel & velocity). This is a stand-in for the future
+   "graveyard" stage: it stops month-old-silent deals from inflating the live
+   pipeline before that stage exists. Set to null to disable and show everything. */
+const DORMANT_AFTER_DAYS = 31;
 
 /* ---- runtime state ---- */
 let RAW_DEALS = [];     // all fetched deals (objects with properties)
@@ -424,7 +538,7 @@ function applyPipeline(pipeline) {
 
 /* Build the property list we need: core fields + hs_date_entered_<stageId>. */
 function dealProperties() {
-  const props = ["dealname", "dealstage", "createdate", "amount", "pipeline"];
+  const props = ["dealname", "dealstage", "createdate", "amount", "pipeline", "hs_is_closed"];
   CONFIG.stages.forEach(s => { if (s.id) props.push("hs_date_entered_" + s.id); });
   return props;
 }
@@ -506,11 +620,19 @@ function computeMetrics(deals) {
   stageKeys.forEach(k => stageDurations[k] = []);
 
   // --- time to approval per deal, plus monthly grouping ---
-  const monthlyApprovalDays = {};  // monthKey -> [days]
-  const monthlyVolume = {};        // monthKey -> count of deals entering pipeline
+  const monthlyApprovalDays = {};   // monthKey -> [days]
+  const monthlyVolume = {};         // monthKey -> count of deals entering pipeline
+  const monthlyApprovedValue = {};  // monthKey -> $ approved that month
+
+  // --- dollars + internal vs. customer time split ---
+  const amounts = [];
+  const internalDaysArr = [];   // Design Start → Sent (work we control)
+  const customerDaysArr = [];   // Design Sent → Approved (wait on customer)
 
   deals.forEach(d => {
     const t = dealStageTimes(d);
+    const amt = parseFloat((d.properties || {}).amount) || 0;
+    if (amt) amounts.push(amt);
 
     stageKeys.forEach((k, i) => {
       if (t[k] != null) {
@@ -534,6 +656,13 @@ function computeMetrics(deals) {
       const days = (t.approved - t.start) / DAY_MS;
       const mk = monthKey(t.approved);
       (monthlyApprovalDays[mk] = monthlyApprovalDays[mk] || []).push(days);
+      monthlyApprovedValue[mk] = (monthlyApprovedValue[mk] || 0) + amt;
+    }
+
+    // internal vs customer split — only deals with the full timeline, so the parts compare cleanly
+    if (t.start != null && t.sent != null && t.approved != null && t.sent >= t.start && t.approved >= t.sent) {
+      internalDaysArr.push((t.sent - t.start) / DAY_MS);
+      customerDaysArr.push((t.approved - t.sent) / DAY_MS);
     }
   });
 
@@ -575,6 +704,12 @@ function computeMetrics(deals) {
   const thisAvg = monthlyApprovalDays[thisMk] ? avg(monthlyApprovalDays[thisMk]) : null;
   const lastAvg = monthlyApprovalDays[lastMk] ? avg(monthlyApprovalDays[lastMk]) : null;
 
+  // dollars + time split
+  const avgDealSize = avg(amounts);
+  const approvedValueThisMonth = monthlyApprovedValue[thisMk] || 0;
+  const avgInternalDays = avg(internalDaysArr);
+  const avgCustomerDays = avg(customerDaysArr);
+
   // --- Stage-to-stage conversion (entered next / entered this) ---
   const conversions = stageKeys.slice(0, -1).map((k, i) => {
     const from = entered[k] || 0;
@@ -611,8 +746,59 @@ function computeMetrics(deals) {
     thisMonthDeals, thisAvg, lastAvg,
     conversions, worstTransitionIdx, worstDrop,
     bottleneckKey, bottleneckDays,
+    avgDealSize, approvedValueThisMonth, avgInternalDays, avgCustomerDays,
     totalDeals: deals.length,
   };
+}
+
+/* Present-tense snapshot — computed across ALL deals (ignores the date filter,
+   since "right now" is inherently current). Drives the Pipeline-right-now strip. */
+function computeLiveState(deals) {
+  const now = Date.now();
+  const stageKeys = CONFIG.stages.map(s => s.key);
+  const activeKeys = stageKeys.slice(0, -1);   // everything except the terminal "approved"
+  const wip = {};
+  activeKeys.forEach(k => wip[k] = 0);
+  let pipelineValue = 0;
+  let dormantCount = 0, dormantValue = 0;
+  const stalled = [];
+
+  deals.forEach(d => {
+    const p = d.properties || {};
+    if (p.hs_is_closed === "true") return;      // closed-lost — left the active pipeline
+    const t = dealStageTimes(d);
+    // current stage = furthest stage with an entry timestamp
+    let cur = -1;
+    stageKeys.forEach((k, i) => { if (t[k] != null) cur = i; });
+    if (cur < 0) return;
+    const curKey = stageKeys[cur];
+    if (curKey === "approved") return;          // shipped to production — no longer active
+
+    const amt = parseFloat(p.amount) || 0;
+    const daysInStage = (now - t[curKey]) / DAY_MS;
+
+    // Dormant: no movement past the cutoff → parked, excluded from the active view.
+    if (DORMANT_AFTER_DAYS != null && daysInStage > DORMANT_AFTER_DAYS) {
+      dormantCount++; dormantValue += amt;
+      return;
+    }
+
+    wip[curKey]++;
+    pipelineValue += amt;
+
+    const sla = SLA[curKey] != null ? SLA[curKey] : 14;
+    if (daysInStage > sla) {
+      stalled.push({
+        name: p.dealname || ("Deal " + d.id),
+        stageLabel: CONFIG.stages[cur].label,
+        days: daysInStage, amount: amt, sla,
+      });
+    }
+  });
+
+  stalled.sort((a, b) => b.days - a.days);
+  const activeTotal = activeKeys.reduce((s, k) => s + wip[k], 0);
+  return { wip, activeKeys, activeTotal, pipelineValue, stalled, dormantCount, dormantValue };
 }
 
 /* ============================================================================
@@ -620,6 +806,112 @@ function computeMetrics(deals) {
    ========================================================================== */
 function fmtDays(v) { return v == null ? "—" : (Math.round(v * 10) / 10).toFixed(1) + "d"; }
 function fmtPct(v)  { return v == null ? "—" : Math.round(v * 100) + "%"; }
+function fmtMoney(v) {
+  if (v == null) return "—";
+  if (v >= 1000000) return "$" + (Math.round(v / 100000) / 10) + "M";
+  if (v >= 1000) return "$" + Math.round(v / 1000) + "k";
+  return "$" + Math.round(v);
+}
+
+function renderLiveState(ls) {
+  document.getElementById("liveAsOf").textContent =
+    "as of " + new Date().toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+
+  document.getElementById("liveActive").textContent = ls.activeTotal;
+  document.getElementById("liveWip").textContent =
+    ls.activeKeys.map((k, i) => ls.wip[k] + " " + CONFIG.stages[i].label.replace("Design ", "").replace(" to Customer", "")).join(" · ");
+
+  document.getElementById("livePipeValue").textContent = fmtMoney(ls.pipelineValue);
+  const avgDeal = ls.activeTotal ? ls.pipelineValue / ls.activeTotal : null;
+  document.getElementById("liveAvgDeal").textContent = avgDeal == null ? "" : "avg " + fmtMoney(avgDeal) + " / deal";
+
+  // approved $ this month is set by renderCards' metrics; filled in renderAll via dataset
+  // Stalled alert
+  const item = document.getElementById("liveStalledItem");
+  const vEl = document.getElementById("liveStalled");
+  const subEl = document.getElementById("liveStalledSub");
+  const n = ls.stalled.length;
+  item.classList.toggle("has-stalled", n > 0);
+  item.classList.toggle("clear", n === 0);
+  vEl.className = "live-v " + (n > 0 ? "warn" : "ok");
+  if (n === 0) {
+    vEl.textContent = "0";
+    subEl.textContent = "All active deals within SLA";
+  } else {
+    vEl.textContent = String(n);
+    const worst = ls.stalled[0];
+    subEl.textContent = "longest: " + Math.round(worst.days) + "d in " + worst.stageLabel.replace("Design ", "");
+  }
+
+  // Stalled list (top 5)
+  const list = document.getElementById("stalledList");
+  list.innerHTML = "";
+  if (n === 0) {
+    const row = document.createElement("div");
+    row.className = "stalled-row ok";
+    row.textContent = "✓ Nothing stalled — every active design is moving within its stage SLA.";
+    list.appendChild(row);
+  } else {
+    ls.stalled.slice(0, 5).forEach(s => {
+      const over = s.days - s.sla;
+      const row = document.createElement("div");
+      row.className = "stalled-row" + (over > s.sla ? " sev-high" : "");
+      row.innerHTML =
+        '<span class="sr-name">' + escapeHtml(s.name) + '</span>' +
+        '<span class="sr-meta">· ' + s.stageLabel + ' · ' + fmtMoney(s.amount) + '</span>' +
+        '<span class="sr-days">' + Math.round(s.days) + 'd <span style="opacity:.7;font-weight:600">(SLA ' + s.sla + 'd)</span></span>';
+      list.appendChild(row);
+    });
+    if (n > 5) {
+      const more = document.createElement("div");
+      more.className = "stalled-row";
+      more.innerHTML = '<span class="sr-meta">+ ' + (n - 5) + ' more stalled…</span>';
+      list.appendChild(more);
+    }
+  }
+
+  // Dormant exclusion note (transparency — we say what's hidden, never hide silently)
+  const dormEl = document.getElementById("dormantNote");
+  if (ls.dormantCount > 0 && DORMANT_AFTER_DAYS != null) {
+    dormEl.style.display = "flex";
+    dormEl.innerHTML = '<span class="moon">☾</span><span><b>' + ls.dormantCount +
+      ' dormant</b> deal' + (ls.dormantCount === 1 ? "" : "s") + ' (no movement in ' + DORMANT_AFTER_DAYS +
+      '+ days, ' + fmtMoney(ls.dormantValue) + ') hidden from the active view — your future graveyard candidates.</span>';
+  } else {
+    dormEl.style.display = "none";
+  }
+}
+
+function renderSplit(m) {
+  const bar = document.getElementById("splitBar");
+  const legend = document.getElementById("splitLegend");
+  const foot = document.getElementById("splitFoot");
+  const internal = m.avgInternalDays, customer = m.avgCustomerDays;
+
+  if (internal == null || customer == null) {
+    bar.innerHTML = "";
+    legend.innerHTML = '<span class="lg">Not enough approved deals in range to split the cycle.</span>';
+    foot.textContent = "";
+    return;
+  }
+  const total = internal + customer || 1;
+  const iPct = Math.round((internal / total) * 100);
+  const cPct = 100 - iPct;
+  bar.innerHTML =
+    '<div class="seg internal" style="width:' + iPct + '%">' + (iPct >= 12 ? fmtDays(internal) : "") + '</div>' +
+    '<div class="seg customer" style="width:' + cPct + '%">' + (cPct >= 12 ? fmtDays(customer) : "") + '</div>';
+  legend.innerHTML =
+    '<span class="lg"><span class="sw internal"></span>Your team — Start → Sent · <b>' + fmtDays(internal) + ' (' + iPct + '%)</b></span>' +
+    '<span class="lg"><span class="sw customer"></span>Customer wait — Sent → Approved · <b>' + fmtDays(customer) + ' (' + cPct + '%)</b></span>';
+
+  if (customer > internal * 1.15) {
+    foot.innerHTML = "Most of the cycle is the <b>customer's</b> review time. The lever here is a tighter follow-up cadence on sent designs — not design speed.";
+  } else if (internal > customer * 1.15) {
+    foot.innerHTML = "Most of the cycle is <b>internal</b> design work. Speeding up Start → Sent is where time can be won.";
+  } else {
+    foot.innerHTML = "Internal work and customer wait are roughly balanced — both sides offer room to tighten.";
+  }
+}
 
 function renderCards(m) {
   document.getElementById("cardAvgDays").textContent = m.avgDaysToApproval == null ? "—" : fmtDays(m.avgDaysToApproval);
@@ -660,6 +952,9 @@ function renderCards(m) {
   document.getElementById("cardThisMonthSub").textContent =
     new Date().toLocaleString("en-US", { month: "long", year: "numeric" });
 
+  // Approved $ this month feeds the "right now" strip
+  document.getElementById("liveApprovedValue").textContent = fmtMoney(m.approvedValueThisMonth);
+
   // Trend: improvement = fewer days this month vs last month
   const trendEl = document.getElementById("cardTrend");
   const pill = document.getElementById("cardTrendPill");
@@ -698,11 +993,16 @@ function renderInsight(m) {
     else velocity = "Velocity is <b>holding steady</b> vs last month";
   }
 
+  // The "sent" stage waits on the customer, so frame its delay as their court, not the designer's.
+  const customerSide = m.bottleneckKey === "sent";
   let bottleneck = null;
   if (m.bottleneckKey) {
     const s = CONFIG.stages.find(x => x.key === m.bottleneckKey);
-    bottleneck = "the biggest time sink is the <span class='hot'>" + s.label +
-      "</span> stage (" + fmtDays(m.bottleneckDays) + " avg before advancing)";
+    bottleneck = customerSide
+      ? "the longest hold is <span class='hot'>" + s.label + "</span> — customers reviewing sent designs (" +
+        fmtDays(m.bottleneckDays) + "), which is mostly in their court"
+      : "the biggest time sink is the <span class='hot'>" + s.label + "</span> stage (" +
+        fmtDays(m.bottleneckDays) + " avg before advancing)";
   }
 
   let leak = null;
@@ -718,7 +1018,9 @@ function renderInsight(m) {
   else if (rest.length === 1) s += (s ? " " : "") + cap(rest[0]) + ".";
 
   if (!s) { el.style.display = "none"; return; }
-  txt.innerHTML = s + " Focus there to move the needle.";
+  txt.innerHTML = s + (customerSide
+    ? " A tighter follow-up cadence is the lever."
+    : " Focus there to move the needle.");
   el.style.display = "flex";
 }
 
@@ -946,10 +1248,12 @@ function renderAll() {
   const toTs   = parseDateInput("toDate", true);
   const filtered = filterDeals(RAW_DEALS, fromTs, toTs);
   const m = computeMetrics(filtered);
+  renderLiveState(computeLiveState(RAW_DEALS));   // "right now" ignores the date filter
   renderInsight(m);
   renderCards(m);
   renderStageGrid(m);
   renderFunnel(m);
+  renderSplit(m);
   renderVelocity(m);
 }
 
@@ -1056,43 +1360,58 @@ function makeDemoDeals() {
 
   const deals = [];
   const start = new Date(2026, 0, 1);
-  const now = new Date(2026, 5, 28);
+  const now = Date.now();
+  const nowDate = new Date(now);
   // deterministic pseudo-random
   let seed = 42;
   const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
 
-  // velocity improves over time: avg approval time shrinks month by month
   let cursor = new Date(start);
   let id = 1;
-  while (cursor < now) {
+  while (cursor <= nowDate) {
     const monthIdx = (cursor.getFullYear() - 2026) * 12 + cursor.getMonth();
-    const baseDays = Math.max(6, 22 - monthIdx * 2.5);   // improving velocity
-    const volume = 14 + Math.round(rnd() * 8) + monthIdx; // growing workload
+    const baseDays = Math.max(6, 22 - monthIdx * 2.5);    // improving velocity over time
+    const volume = 14 + Math.round(rnd() * 8) + monthIdx;  // growing workload
     for (let k = 0; k < volume; k++) {
       const day = 1 + Math.floor(rnd() * 26);
       const t0 = new Date(cursor.getFullYear(), cursor.getMonth(), day, 9, 0, 0).getTime();
-      const d1 = baseDays * (0.18 + rnd() * 0.2);
-      const d2 = baseDays * (0.22 + rnd() * 0.25);
-      const d3 = baseDays * (0.30 + rnd() * 0.3);
-      const tContacted = t0 + d1 * DAY_MS;
-      const tSent = tContacted + d2 * DAY_MS;
-      const tApproved = tSent + d3 * DAY_MS;
+      if (t0 > now) continue;
+
+      // intended stage-entry timestamps along the deal's natural timeline
+      const d1 = baseDays * (0.18 + rnd() * 0.25);
+      const d2 = baseDays * (0.22 + rnd() * 0.30);
+      const d3 = baseDays * (0.30 + rnd() * 0.55);         // customer wait — more variable
+      const times = [t0, t0 + d1 * DAY_MS, t0 + (d1 + d2) * DAY_MS, t0 + (d1 + d2 + d3) * DAY_MS];
+
+      // fate — most deals complete; some abandon (stall) at an earlier stage and never progress
+      const r = rnd();
+      let abandonAt = 3;                 // default: reaches Design Approved
+      if (r < 0.05) abandonAt = 0;       // stuck right after Design Start
+      else if (r < 0.16) abandonAt = 1;  // stuck in Contacted
+      else if (r < 0.30) abandonAt = 2;  // stuck in Design Sent (awaiting customer, never approved)
 
       const props = {
         dealname: "Design Deal #" + id,
         pipeline: CONFIG.pipelineId,
         createdate: new Date(t0).toISOString(),
-        amount: String(2000 + Math.round(rnd() * 8000)),
+        amount: String(1500 + Math.round(rnd() * 9000)),
       };
-      // funnel drop-off: not every deal advances all the way
-      const r = rnd();
-      props["hs_date_entered_" + ids[0]] = new Date(t0).toISOString();
-      if (r > 0.06) props["hs_date_entered_" + ids[1]] = new Date(tContacted).toISOString();
-      if (r > 0.22) props["hs_date_entered_" + ids[2]] = new Date(tSent).toISOString();
-      // of those reaching Sent, ~78% get approved
-      if (r > 0.22 && rnd() > 0.22 && tApproved < now.getTime() + DAY_MS)
-        props["hs_date_entered_" + ids[3]] = new Date(tApproved).toISOString();
-
+      // Only set stage-entry timestamps that have actually happened by "now"
+      // and that the deal reached before abandoning. Current stage = furthest set.
+      let current = -1;
+      for (let s = 0; s <= abandonAt; s++) {
+        if (times[s] <= now) {
+          props["hs_date_entered_" + ids[s]] = new Date(times[s]).toISOString();
+          current = s;
+        } else break;
+      }
+      if (current < 0) { id++; continue; }
+      props.dealstage = ids[current];
+      // Only very old abandons (90d+) are treated as already cleaned up (closed-lost). The rest
+      // stay open — the dashboard's DORMANT_AFTER_DAYS cutoff sorts those into stalled vs dormant,
+      // mirroring a pipeline that doesn't yet have a graveyard stage.
+      const daysSince = (now - times[current]) / DAY_MS;
+      props.hs_is_closed = (abandonAt < 3 && current === abandonAt && daysSince > 90) ? "true" : "false";
       deals.push({ id: String(id), properties: props });
       id++;
     }
