@@ -523,9 +523,25 @@ function authHeaders() {
   return h;
 }
 
+async function readErr(res) {
+  // Surface the real upstream message (HubSpot's error, or our proxy's) instead of just a code.
+  try {
+    const t = await res.text();
+    if (!t) return res.statusText;
+    try {
+      const j = JSON.parse(t);
+      return (j.message || j.error || t).toString().slice(0, 240);
+    } catch (_) { return t.slice(0, 240); }
+  } catch (_) { return res.statusText; }
+}
+
 async function hsGet(path) {
   const res = await fetch(apiUrl(path), { headers: authHeaders() });
-  if (!res.ok) throw new Error("GET " + path + " → " + res.status + " " + res.statusText);
+  if (!res.ok) {
+    const detail = await readErr(res);
+    console.error("GET " + path + " → " + res.status, detail);
+    throw new Error("GET " + path + " → " + res.status + ": " + detail);
+  }
   return res.json();
 }
 
@@ -535,7 +551,11 @@ async function hsPost(path, body) {
     headers: authHeaders(),
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error("POST " + path + " → " + res.status + " " + res.statusText);
+  if (!res.ok) {
+    const detail = await readErr(res);
+    console.error("POST " + path + " → " + res.status, detail);
+    throw new Error("POST " + path + " → " + res.status + ": " + detail);
+  }
   return res.json();
 }
 
@@ -1412,10 +1432,16 @@ async function loadDealsAndRender() {
     renderAll();
   } catch (e) {
     setLoading(false);
-    const hint = PROXY_BASE
-      ? "Showing <strong>demo data</strong>. Live data loads when this is deployed to Cloudflare Pages with the <code>HUBSPOT_TOKEN</code> secret set (the <code>" + escapeHtml(PROXY_BASE) + "</code> proxy isn't reachable here)."
-      : "Showing <strong>demo data</strong>. Browsers block direct HubSpot calls via CORS — use the Cloudflare proxy (set <code>PROXY_BASE = \"/api\"</code>) or a backend.";
-    banner("err", "Could not fetch live deals (<code>" + escapeHtml(e.message) + "</code>). " + hint);
+    const msg = String(e.message || e);
+    // A real HTTP status back (e.g. 4xx/5xx) means the proxy IS reachable — it's an
+    // upstream/HubSpot issue. A network failure means we're local or the proxy is down.
+    const gotStatus = /→\s*\d{3}/.test(msg);
+    const hint = gotStatus
+      ? "The <code>" + escapeHtml(PROXY_BASE || "API") + "</code> proxy responded, so this is a HubSpot-side issue (token scopes or a property). The message above is HubSpot's. Showing <strong>demo data</strong> meanwhile."
+      : (PROXY_BASE
+          ? "Showing <strong>demo data</strong> — the <code>" + escapeHtml(PROXY_BASE) + "</code> proxy isn't reachable (running locally, or not deployed yet)."
+          : "Showing <strong>demo data</strong>. Browsers block direct HubSpot calls via CORS — use the Cloudflare proxy or a backend.");
+    banner("err", "Could not fetch live deals — <code>" + escapeHtml(msg) + "</code>. " + hint);
     RAW_DEALS = makeDemoDeals();
     renderAll();
   }

@@ -67,6 +67,10 @@ export async function onRequest(context) {
 
   // Pass the HubSpot response straight back to the browser.
   const body = await upstream.text();
+  if (!upstream.ok) {
+    // Surface the upstream error in the Pages function logs for debugging.
+    console.log("HubSpot " + request.method + " /" + subPath + " → " + upstream.status + ": " + body.slice(0, 500));
+  }
   return new Response(body, {
     status: upstream.status,
     headers: { "content-type": upstream.headers.get("content-type") || "application/json" },
