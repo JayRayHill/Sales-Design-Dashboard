@@ -156,9 +156,8 @@
     display: flex;
     align-items: flex-start;
     gap: 11px;
-    background: linear-gradient(0deg, #fff, #fff) padding-box,
-                linear-gradient(90deg, var(--green), var(--orange)) border-box;
-    border: 1px solid transparent;
+    background: #fff;
+    border: 1px solid var(--orange);
     border-left: 4px solid var(--orange);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
@@ -528,9 +527,17 @@ const FOLLOWUP_DAYS = 2;
 const COLD_AFTER_DAYS = 30;
 const GRAVEYARD_AFTER_DAYS = null;
 
+/* Snooze: if a deal's ticket has a FUTURE value in this property, follow-up is
+   "paused" (scheduled) and the deal won't show as overdue until that date passes.
+   To pause a deal (e.g. customer asked not to be contacted yet), log a task /
+   reminder on its ticket for when to check back. Swap to a custom date property
+   (e.g. a "Follow-up paused until" field) here if you'd rather use a dedicated one. */
+const SNOOZE_TICKET_PROP = "hs_nextactivitydate";
+
 /* ---- runtime state ---- */
 let RAW_DEALS = [];     // all fetched deals (objects with properties)
 let TICKET_TOUCH = {};  // dealId -> last-contacted timestamp from the linked Help Desk ticket
+let TICKET_NEXT = {};   // dealId -> future "next activity" timestamp → follow-up snoozed until then
 let charts = { funnel: null, velocity: null };
 
 /* ============================================================================
@@ -673,6 +680,7 @@ async function fetchAllDeals() {
    Best-effort: any failure just leaves the deal to fall back to its own signal. */
 async function fetchTicketTouch(deals) {
   TICKET_TOUCH = {};
+  TICKET_NEXT = {};
   const ids = deals.map(d => String(d.id)).filter(Boolean);
   if (!ids.length) return;
   const chunk = (arr, n) => { const out = []; for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n)); return out; };
@@ -693,24 +701,28 @@ async function fetchTicketTouch(deals) {
   }
   if (!ticketIds.size) return;
 
-  // 2) ticket -> last contacted (last logged outreach), fall back to last activity
-  const touch = {};
+  // 2) ticket -> last contacted (last logged outreach) + next activity (snooze signal)
+  const touch = {}, next = {};
   for (const part of chunk([...ticketIds], 100)) {
     try {
       const data = await hsPost("/crm/v3/objects/tickets/batch/read",
-        { properties: ["hs_lastcontacted", "hs_lastactivitydate"], inputs: part.map(id => ({ id })) });
+        { properties: ["hs_lastcontacted", "hs_lastactivitydate", SNOOZE_TICKET_PROP], inputs: part.map(id => ({ id })) });
       (data.results || []).forEach(tk => {
         const p = tk.properties || {};
         const ts = parseTs(p.hs_lastcontacted) || parseTs(p.hs_lastactivitydate);
         if (ts != null) touch[tk.id] = ts;
+        const nx = parseTs(p[SNOOZE_TICKET_PROP]);
+        if (nx != null) next[tk.id] = nx;
       });
     } catch (e) { console.warn("ticket read failed:", e.message); }
   }
 
-  // 3) deal -> most recent touch across its tickets
+  // 3) deal -> most recent touch + furthest scheduled next-activity across its tickets
   Object.keys(dealToTickets).forEach(did => {
-    const vals = dealToTickets[did].map(t => touch[t]).filter(v => v != null);
-    if (vals.length) TICKET_TOUCH[did] = Math.max.apply(null, vals);
+    const tvals = dealToTickets[did].map(t => touch[t]).filter(v => v != null);
+    if (tvals.length) TICKET_TOUCH[did] = Math.max.apply(null, tvals);
+    const nvals = dealToTickets[did].map(t => next[t]).filter(v => v != null);
+    if (nvals.length) TICKET_NEXT[did] = Math.max.apply(null, nvals);
   });
 }
 
@@ -963,7 +975,8 @@ function computeLiveState(deals) {
   let coldCount = 0, coldValue = 0;
   let graveyardCount = 0, graveyardValue = 0;
   let restartCount = 0, restartValue = 0;   // Design ReStart — rework, tracked on its own
-  const followups = [];   // deals overdue for a nudge (silent ≥ FOLLOWUP_DAYS)
+  let snoozedCount = 0, snoozedValue = 0;   // follow-up paused (future next-activity on ticket)
+  const followups = [];   // deals overdue for a nudge (silent ≥ FOLLOWUP_DAYS, not snoozed)
 
   deals.forEach(d => {
     const p = d.properties || {};
@@ -981,13 +994,18 @@ function computeLiveState(deals) {
     const enteredCur = enteredDateOf(d, p.dealstage) || parseTs(p.createdate) || now;
     const daysInStage = (now - enteredCur) / DAY_MS;
     const daysSilent = (now - lastTouchTs(d, enteredCur)) / DAY_MS;
-    const overdue = daysSilent >= FOLLOWUP_DAYS;
+    // Snoozed: a future next-activity on the ticket means follow-up is intentionally
+    // paused (e.g. customer asked us to wait) — don't flag it as overdue until then.
+    const nextAct = TICKET_NEXT[String(d.id)];
+    const snoozed = nextAct != null && nextAct > now;
+    if (snoozed) { snoozedCount++; snoozedValue += amt; }
+    const due = daysSilent >= FOLLOWUP_DAYS && !snoozed;
 
     // Design ReStart — its own bucket. Still chased (appears in the follow-up list),
     // but kept out of the funnel/active-stage counts.
     if (isRestart) {
       restartCount++; restartValue += amt;
-      if (overdue) followups.push({
+      if (due) followups.push({
         name: p.dealname || ("Deal " + d.id),
         stageLabel: "Design ReStart", amount: amt, daysSilent, daysInStage, cold: false, restart: true,
       });
@@ -1008,7 +1026,7 @@ function computeLiveState(deals) {
     if (cold) { coldCount++; coldValue += amt; }
     else { wip[curKey]++; pipelineValue += amt; }
 
-    if (overdue) followups.push({
+    if (due) followups.push({
       name: p.dealname || ("Deal " + d.id),
       stageLabel: CONFIG.stages[cur].label,
       amount: amt, daysSilent, daysInStage, cold,
@@ -1020,7 +1038,7 @@ function computeLiveState(deals) {
   return {
     wip, activeKeys, activeTotal, pipelineValue, followups,
     coldCount, coldValue, graveyardCount, graveyardValue,
-    restartCount, restartValue,
+    restartCount, restartValue, snoozedCount, snoozedValue,
   };
 }
 
@@ -1115,6 +1133,10 @@ function renderLiveState(ls) {
   // Cold / ReStart / graveyard note (transparency — flag these piles, never hide silently)
   const dormEl = document.getElementById("dormantNote");
   const parts = [];
+  if (ls.snoozedCount > 0) {
+    parts.push('⏸ <b>' + ls.snoozedCount + ' paused</b> (' + fmtMoney(ls.snoozedValue) +
+      ') — follow-up snoozed to a scheduled date');
+  }
   if (ls.restartCount > 0) {
     parts.push('🔄 <b>' + ls.restartCount + ' in Design ReStart</b> (' + fmtMoney(ls.restartValue) +
       ') — rework, tracked separately');
