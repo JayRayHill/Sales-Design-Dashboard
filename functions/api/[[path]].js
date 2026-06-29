@@ -28,14 +28,14 @@ const ALLOWED = [
 export async function onRequest(context) {
   const { request, env, params } = context;
 
-  if (!env.HUBSPOT_TOKEN) {
-    // Diagnostic: list the env binding NAMES the function actually sees (never values),
-    // so we can tell "missing" vs "misnamed" vs "present-but-empty".
+  // Trim defensively — a trailing newline/space from the paste corrupts the Bearer header.
+  const token = (env.HUBSPOT_TOKEN || "").trim();
+  if (!token) {
     const keys = Object.keys(env || {});
     const hasName = keys.includes("HUBSPOT_TOKEN");
     return json({
       error: "HUBSPOT_TOKEN not usable. namePresent=" + hasName +
-        (hasName ? " (present but empty)" : "") +
+        (hasName ? " (present but empty/whitespace)" : "") +
         " · env keys seen: [" + keys.join(", ") + "]",
     }, 500);
   }
@@ -58,7 +58,7 @@ export async function onRequest(context) {
   const init = {
     method: request.method,
     headers: {
-      "Authorization": "Bearer " + env.HUBSPOT_TOKEN,
+      "Authorization": "Bearer " + token,
       "Content-Type": "application/json",
     },
   };
