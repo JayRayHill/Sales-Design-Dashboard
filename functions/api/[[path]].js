@@ -47,21 +47,37 @@ export async function onRequest(context) {
   // Diagnostic: live-test the token against HubSpot, server-side (no browser cache).
   // Reports token SHAPE only (prefix + length), never the value.
   if (subPath === "_diag") {
-    let status = "n/a", body = "";
+    const out = { tokenPrefix: token.slice(0, 8), tokenLength: token.length, looksLikePat: token.startsWith("pat-") };
     try {
       const r = await fetch("https://api.hubapi.com/crm/v3/pipelines/deals", {
         headers: { "Authorization": "Bearer " + token },
       });
-      status = r.status;
-      body = (await r.text()).slice(0, 200);
-    } catch (e) { status = "fetch-failed"; body = String((e && e.message) || e); }
-    return json({
-      tokenPrefix: token.slice(0, 8),
-      tokenLength: token.length,
-      looksLikePat: token.startsWith("pat-"),
-      hubspotPipelinesStatus: status,
-      hubspotBody: body,
-    }, 200);
+      out.hubspotPipelinesStatus = r.status;
+    } catch (e) { out.hubspotPipelinesStatus = "fetch-failed: " + ((e && e.message) || e); }
+
+    // Pull 2 real Design-pipeline deals with the exact stage-timestamp props the
+    // dashboard uses, and return their raw properties so we can see what's populated.
+    try {
+      const body = JSON.stringify({
+        filterGroups: [{ filters: [{ propertyName: "pipeline", operator: "EQ", value: "4855431" }] }],
+        properties: ["dealname", "dealstage", "createdate", "amount",
+          "hs_date_entered_15610785", "hs_date_entered_51980918",
+          "hs_date_entered_15610786", "hs_date_entered_15610787", "notes_last_contacted"],
+        limit: 2,
+        sorts: [{ propertyName: "hs_lastmodifieddate", direction: "DESCENDING" }],
+      });
+      const r2 = await fetch("https://api.hubapi.com/crm/v3/objects/deals/search", {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
+        body,
+      });
+      out.dealSearchStatus = r2.status;
+      const j = await r2.json();
+      out.dealTotal = j.total;
+      out.sampleDeals = (j.results || []).map(d => d.properties);
+    } catch (e) { out.dealSearchStatus = "fetch-failed: " + ((e && e.message) || e); }
+
+    return json(out, 200);
   }
 
   if (!ALLOWED.some((re) => re.test(subPath))) {
