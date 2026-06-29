@@ -73,13 +73,16 @@ export async function onRequest(context) {
   }
   return new Response(body, {
     status: upstream.status,
-    headers: { "content-type": upstream.headers.get("content-type") || "application/json" },
+    headers: {
+      "content-type": upstream.headers.get("content-type") || "application/json",
+      "cache-control": "no-store",
+    },
   });
 }
 
 function json(obj, status) {
   return new Response(JSON.stringify(obj), {
     status: status || 200,
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", "cache-control": "no-store" },
   });
 }
