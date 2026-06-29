@@ -525,6 +525,7 @@ const GRAVEYARD_AFTER_DAYS = 365;
 
 /* ---- runtime state ---- */
 let RAW_DEALS = [];     // all fetched deals (objects with properties)
+let TICKET_TOUCH = {};  // dealId -> last-contacted timestamp from the linked Help Desk ticket
 let charts = { funnel: null, velocity: null };
 
 /* ============================================================================
@@ -659,6 +660,53 @@ async function fetchAllDeals() {
     setLoading(true, "Fetching deals… " + all.length);
   } while (after);
   return all;
+}
+
+/* Follow-up happens on the linked Help Desk ticket, not the deal. For the active
+   deals, look up the associated ticket(s) and use the ticket's last-contacted date
+   as the real "last touched" signal. Populates TICKET_TOUCH (dealId -> timestamp).
+   Best-effort: any failure just leaves the deal to fall back to its own signal. */
+async function fetchTicketTouch(deals) {
+  TICKET_TOUCH = {};
+  const ids = deals.map(d => String(d.id)).filter(Boolean);
+  if (!ids.length) return;
+  const chunk = (arr, n) => { const out = []; for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n)); return out; };
+
+  // 1) deal -> ticket associations
+  const dealToTickets = {};
+  const ticketIds = new Set();
+  for (const part of chunk(ids, 100)) {
+    try {
+      const data = await hsPost("/crm/v4/associations/deals/tickets/batch/read",
+        { inputs: part.map(id => ({ id })) });
+      (data.results || []).forEach(r => {
+        const did = r.from && r.from.id;
+        const tids = (r.to || []).map(x => String(x.toObjectId));
+        if (did && tids.length) { dealToTickets[did] = tids; tids.forEach(t => ticketIds.add(t)); }
+      });
+    } catch (e) { console.warn("ticket assoc fetch failed:", e.message); }
+  }
+  if (!ticketIds.size) return;
+
+  // 2) ticket -> last contacted (last logged outreach), fall back to last activity
+  const touch = {};
+  for (const part of chunk([...ticketIds], 100)) {
+    try {
+      const data = await hsPost("/crm/v3/objects/tickets/batch/read",
+        { properties: ["hs_lastcontacted", "hs_lastactivitydate"], inputs: part.map(id => ({ id })) });
+      (data.results || []).forEach(tk => {
+        const p = tk.properties || {};
+        const ts = parseTs(p.hs_lastcontacted) || parseTs(p.hs_lastactivitydate);
+        if (ts != null) touch[tk.id] = ts;
+      });
+    } catch (e) { console.warn("ticket read failed:", e.message); }
+  }
+
+  // 3) deal -> most recent touch across its tickets
+  Object.keys(dealToTickets).forEach(did => {
+    const vals = dealToTickets[did].map(t => touch[t]).filter(v => v != null);
+    if (vals.length) TICKET_TOUCH[did] = Math.max.apply(null, vals);
+  });
 }
 
 /* ============================================================================
@@ -886,12 +934,14 @@ function computeMetrics(deals) {
   };
 }
 
-/* Most recent time a deal was touched — HubSpot last-activity / last-contacted if
-   available, otherwise the fallback (time the current stage was entered). */
+/* Most recent time a deal was followed up. Follow-up is done on the linked Help Desk
+   ticket, so prefer the ticket's last-contacted (TICKET_TOUCH); fall back to the
+   deal's own contact date, then to the stage-entry time. */
 function lastTouchTs(deal, fallbackTs) {
+  const fromTicket = TICKET_TOUCH[String(deal.id)];
+  if (fromTicket != null) return fromTicket;
   const p = deal.properties || {};
-  const cands = [p.hs_last_activity_date, p.notes_last_contacted]
-    .map(parseTs).filter(v => v != null);
+  const cands = [p.notes_last_contacted].map(parseTs).filter(v => v != null);
   return cands.length ? Math.max.apply(null, cands) : fallbackTs;
 }
 
@@ -1523,6 +1573,13 @@ async function loadDealsAndRender() {
     hideBanner();
     setLoading(true, "Fetching deals…");
     RAW_DEALS = await fetchAllDeals();
+    // Pull ticket follow-up dates for in-flight deals (active design + ReStart).
+    setLoading(true, "Linking Help Desk tickets…");
+    const inFlight = RAW_DEALS.filter(d => {
+      const c = classifyCurrentStage((d.properties || {}).dealstage);
+      return c.active || c.restart;
+    });
+    await fetchTicketTouch(inFlight);
     setLoading(false);
     if (!RAW_DEALS.length) {
       banner("warn", "No deals returned for this pipeline.");

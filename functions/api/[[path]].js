@@ -23,6 +23,8 @@ const ALLOWED = [
   /^crm\/v3\/pipelines\/deals(\/.*)?$/,
   /^crm\/v3\/objects\/deals\/search$/,
   /^crm\/v3\/objects\/deals(\/.*)?$/,
+  /^crm\/v3\/objects\/tickets\/batch\/read$/,        // ticket follow-up (hs_lastcontacted)
+  /^crm\/v4\/associations\/deals\/tickets\/batch\/read$/, // deal → ticket links
 ];
 
 export async function onRequest(context) {
