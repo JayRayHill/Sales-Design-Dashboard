@@ -29,7 +29,15 @@ export async function onRequest(context) {
   const { request, env, params } = context;
 
   if (!env.HUBSPOT_TOKEN) {
-    return json({ error: "HUBSPOT_TOKEN secret is not configured on this Pages project." }, 500);
+    // Diagnostic: list the env binding NAMES the function actually sees (never values),
+    // so we can tell "missing" vs "misnamed" vs "present-but-empty".
+    const keys = Object.keys(env || {});
+    const hasName = keys.includes("HUBSPOT_TOKEN");
+    return json({
+      error: "HUBSPOT_TOKEN not usable. namePresent=" + hasName +
+        (hasName ? " (present but empty)" : "") +
+        " · env keys seen: [" + keys.join(", ") + "]",
+    }, 500);
   }
 
   // params.path is the catch-all after /api/ (array of segments)
