@@ -22,11 +22,18 @@
     --hcf-aura-speed  rotation speed of the color current (default 10s)
     --hcf-frost       frost opacity at rest, 0-1 (default 0.62)
     --hcf-radius      corner radius (default 12px)
-    --hcf-label       label text color (default Roasted dark #BC5713)
+    --hcf-label       label text color (default Ink #161310)
 
-  Optional variants — add a class next to hcf-glass-btn:
-    hcf-glass-btn--ring    color shows as a crisp moving border ring
-    hcf-glass-btn--molten  thinner frost, richer color at rest
+  Optional finish variants — add a class next to hcf-glass-btn:
+    hcf-glass-btn--ring     color shows as a crisp moving border ring
+    hcf-glass-btn--molten   thinner frost, richer color at rest
+
+  Optional color ranges — add one of these to change the current's palette
+  (default is the full brand run: Roasted -> Brew -> Iced):
+    hcf-glass-btn--roasted  orange only
+    hcf-glass-btn--brew     yellow only
+    hcf-glass-btn--iced     blue only
+    hcf-glass-btn--sunrise  orange + yellow, no cool tones
 {%- endcomment -%}
 
 {%- assign customize_handle = product.metafields.custom.customize_it_product -%}
@@ -53,7 +60,17 @@
         --hcf-aura-speed: 10s;
         --hcf-frost: 0.62;
         --hcf-radius: 12px;
-        --hcf-label: #BC5713; /* Roasted dark — White bg → Roasted CTA pairing */
+        --hcf-label: #161310; /* Ink */
+        /* Color current — Full brand by default */
+        --hcf-c1: #BC5713;
+        --hcf-c2: #FD822C;
+        --hcf-c3: #FFCB1F;
+        --hcf-c4: #9FDCED;
+        --hcf-c5: #2A7A8A;
+        --hcf-glow-rest: rgba(188, 87, 19, 0.40);
+        --hcf-glow-a: rgba(253, 130, 44, 0.55);
+        --hcf-glow-b: rgba(42, 122, 138, 0.35);
+        --hcf-tint: rgba(188, 87, 19, 0.25);
 
         position: relative;
         z-index: 0;
@@ -77,7 +94,7 @@
         cursor: pointer;
         box-shadow:
           0 1px 3px rgba(22, 19, 16, 0.12),
-          0 10px 26px -14px rgba(188, 87, 19, 0.40);
+          0 10px 26px -14px var(--hcf-glow-rest);
         transition: transform 0.35s ease, box-shadow 0.35s ease;
       }
       .hcf-glass-btn:hover { text-decoration: none; }
@@ -94,12 +111,12 @@
         border-radius: 50%;
         background: conic-gradient(
           from 20deg,
-          #BC5713,  /* Roasted dark */
-          #FD822C,  /* Roasted */
-          #FFCB1F,  /* Brew */
-          #9FDCED,  /* Iced light */
-          #2A7A8A,  /* Iced dark */
-          #BC5713
+          var(--hcf-c1),
+          var(--hcf-c2),
+          var(--hcf-c3),
+          var(--hcf-c4),
+          var(--hcf-c5),
+          var(--hcf-c1)
         );
         filter: blur(26px) saturate(1.05);
         animation: hcf-aura-turn var(--hcf-aura-speed) linear infinite;
@@ -119,7 +136,7 @@
         border: 1px solid rgba(255, 255, 255, 0.72);
         box-shadow:
           inset 0 1px 0 rgba(255, 255, 255, 0.9),
-          inset 0 -10px 24px -14px rgba(188, 87, 19, 0.25);
+          inset 0 -10px 24px -14px var(--hcf-tint);
         transition: background 0.45s ease;
       }
 
@@ -145,8 +162,8 @@
           transform: translateY(-2px);
           box-shadow:
             0 2px 4px rgba(22, 19, 16, 0.10),
-            0 18px 38px -16px rgba(253, 130, 44, 0.55),
-            0 8px 24px -12px rgba(42, 122, 138, 0.35);
+            0 18px 38px -16px var(--hcf-glow-a),
+            0 8px 24px -12px var(--hcf-glow-b);
         }
         .hcf-glass-btn:hover .hcf-glass-btn__frost {
           background: rgba(255, 255, 255, calc(var(--hcf-frost) - 0.28));
@@ -179,6 +196,36 @@
       /* Variant: Molten — thinner frost, richer color at rest */
       .hcf-glass-btn--molten { --hcf-frost: 0.40; }
       .hcf-glass-btn--molten .hcf-glass-btn__aura { filter: blur(24px) saturate(1.25); }
+
+      /* Color ranges — swap the current's palette with one class */
+      .hcf-glass-btn--roasted {
+        --hcf-c1: #BC5713; --hcf-c2: #FD822C; --hcf-c3: #FFCCA9; --hcf-c4: #FD822C; --hcf-c5: #BC5713;
+        --hcf-glow-rest: rgba(188, 87, 19, 0.40);
+        --hcf-glow-a: rgba(253, 130, 44, 0.55);
+        --hcf-glow-b: rgba(188, 87, 19, 0.30);
+        --hcf-tint: rgba(188, 87, 19, 0.25);
+      }
+      .hcf-glass-btn--brew {
+        --hcf-c1: #D8A105; --hcf-c2: #FFCB1F; --hcf-c3: #FFEDCA; --hcf-c4: #FFCB1F; --hcf-c5: #D8A105;
+        --hcf-glow-rest: rgba(216, 161, 5, 0.40);
+        --hcf-glow-a: rgba(255, 203, 31, 0.60);
+        --hcf-glow-b: rgba(216, 161, 5, 0.35);
+        --hcf-tint: rgba(216, 161, 5, 0.25);
+      }
+      .hcf-glass-btn--iced {
+        --hcf-c1: #2A7A8A; --hcf-c2: #9FDCED; --hcf-c3: #CFF0F8; --hcf-c4: #9FDCED; --hcf-c5: #2A7A8A;
+        --hcf-glow-rest: rgba(42, 122, 138, 0.40);
+        --hcf-glow-a: rgba(159, 220, 237, 0.65);
+        --hcf-glow-b: rgba(42, 122, 138, 0.40);
+        --hcf-tint: rgba(42, 122, 138, 0.25);
+      }
+      .hcf-glass-btn--sunrise {
+        --hcf-c1: #BC5713; --hcf-c2: #FD822C; --hcf-c3: #FFCB1F; --hcf-c4: #FFEDCA; --hcf-c5: #FD822C;
+        --hcf-glow-rest: rgba(188, 87, 19, 0.40);
+        --hcf-glow-a: rgba(253, 130, 44, 0.55);
+        --hcf-glow-b: rgba(255, 203, 31, 0.40);
+        --hcf-tint: rgba(188, 87, 19, 0.25);
+      }
 
       /* Fallback for browsers without backdrop-filter (rare) */
       @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {

@@ -16,16 +16,18 @@ Pure CSS — no images, no JavaScript, no apps.
 
 ## Brand colors used (HCF design system v12)
 
-The moving current runs, weighted warm with one cool pass:
+The default moving current is the full brand run, weighted warm with one
+cool pass:
 
 Roasted dark `#BC5713` → Roasted `#FD822C` → Brew `#FFCB1F` → Iced light `#9FDCED` → Iced dark `#2A7A8A`
 
-Label is Roasted dark `#BC5713` (the design system's "White bg → Roasted CTA"
-pairing), focus ring is Roasted `#FD822C`.
+Label is Ink `#161310`, focus ring is Roasted `#FD822C`.
 
-Note: the design system scopes Iced teal to cold-product sections. Here it
-appears only as a moving accent inside the glass. To stay strictly warm,
-delete the two Iced stops from the `conic-gradient` in the snippet.
+Four alternate color ranges ship as one-class swaps (see Tuning below):
+Roasted only, Brew only, Iced only, and Roasted + Brew ("sunrise", no cool
+tones). Note: the design system scopes Iced teal to cold-product sections —
+the full-brand and Iced-only ranges use it only as a moving accent inside
+the glass; pick Roasted, Brew, or Roasted + Brew to stay strictly warm.
 
 ## Install (Main Theme 2026)
 
@@ -72,14 +74,23 @@ CSS variables on `.hcf-glass-btn`:
 | `--hcf-aura-speed` | `10s` | One full rotation of the color current — higher is slower |
 | `--hcf-frost` | `0.62` | Frost opacity at rest (0–1) — lower shows more color |
 | `--hcf-radius` | `12px` | Corner radius |
-| `--hcf-label` | `#BC5713` | Label text color (Roasted dark) |
+| `--hcf-label` | `#161310` | Label text color (Ink) |
 
-Variants (add a class beside `hcf-glass-btn` in the snippet markup):
+Finish variants (add a class beside `hcf-glass-btn` in the snippet markup):
 
 - `hcf-glass-btn--ring` — near-clear glass, the color shows as a crisp moving
   border ring (closest to the previous button's look)
 - `hcf-glass-btn--molten` — thinner frost, richer color at rest, maximum
   attention
+
+Color ranges (combine freely with any finish; default is the full brand run):
+
+- `hcf-glass-btn--roasted` — orange only
+- `hcf-glass-btn--brew` — yellow only
+- `hcf-glass-btn--iced` — blue only
+- `hcf-glass-btn--sunrise` — orange + yellow, no cool tones
+
+Each range also retunes the button's glow/shadow colors to match.
 
 ## Accessibility & performance
 
