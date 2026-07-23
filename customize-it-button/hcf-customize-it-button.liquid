@@ -1,0 +1,195 @@
+{%- comment -%}
+  Customize It — frosted liquid-glass CTA for product pages.
+
+  A slow-turning current of brand color (Roasted dark -> Roasted -> Brew ->
+  Iced light -> Iced dark) drifts behind a frosted glass pane. On hover or
+  press the frost thins and the color surges through, with a specular sweep.
+  Pure CSS — no images, no JS, no apps.
+
+  Trigger logic is unchanged from the old button: renders only when the
+  product has the custom.customize_it_product metafield, and links to that
+  product.
+
+  INSTALL
+  1. Save this file as snippets/hcf-customize-it-button.liquid
+  2. In snippets/product-template.liquid, find the old block (search for
+     "hcf-customize-it-container", inside the buy_buttons case) and replace
+     the whole {% if metafield_value %} ... {% endif %} block with:
+
+       {% render 'hcf-customize-it-button', product: product %}
+
+  TUNING (CSS variables on .hcf-glass-btn below)
+    --hcf-aura-speed  rotation speed of the color current (default 14s)
+    --hcf-frost       frost opacity at rest, 0-1 (default 0.62)
+    --hcf-radius      corner radius (default 12px)
+
+  Optional variants — add a class next to hcf-glass-btn:
+    hcf-glass-btn--ring    color shows as a crisp moving border ring
+    hcf-glass-btn--molten  thinner frost, richer color at rest
+{%- endcomment -%}
+
+{%- assign customize_handle = product.metafields.custom.customize_it_product -%}
+{%- if customize_handle -%}
+  {%- assign related_product = all_products[customize_handle] -%}
+  {%- if related_product -%}
+    <div class="hcf-customize-it-container">
+      <a
+        href="{{ related_product.url }}"
+        class="hcf-glass-btn"
+        aria-label="Customize {{ product.title | escape }}"
+      >
+        <span class="hcf-glass-btn__aura" aria-hidden="true"></span>
+        <span class="hcf-glass-btn__frost" aria-hidden="true"></span>
+        <span class="hcf-glass-btn__shine" aria-hidden="true"></span>
+        <span class="hcf-glass-btn__label">Customize It</span>
+      </a>
+    </div>
+
+    {% style %}
+      .hcf-customize-it-container { margin: 14px 0; }
+
+      .hcf-glass-btn {
+        --hcf-aura-speed: 14s;
+        --hcf-frost: 0.62;
+        --hcf-radius: 12px;
+
+        position: relative;
+        z-index: 0;
+        isolation: isolate;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 58px;
+        padding: 16px 32px;
+        border-radius: var(--hcf-radius);
+        overflow: hidden;
+        text-decoration: none;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        font-weight: 700;
+        font-size: 15px;
+        color: #161310; /* Ink */
+        -webkit-tap-highlight-color: transparent;
+        cursor: pointer;
+        box-shadow:
+          0 1px 3px rgba(22, 19, 16, 0.12),
+          0 10px 26px -14px rgba(188, 87, 19, 0.40);
+        transition: transform 0.35s ease, box-shadow 0.35s ease;
+      }
+      .hcf-glass-btn:hover { text-decoration: none; }
+
+      /* Slow-turning current of brand color, blurred into a liquid wash */
+      .hcf-glass-btn__aura {
+        position: absolute;
+        z-index: -2;
+        left: 50%;
+        top: 50%;
+        width: max(170%, 480px);
+        aspect-ratio: 1;
+        translate: -50% -50%;
+        border-radius: 50%;
+        background: conic-gradient(
+          from 20deg,
+          #BC5713,  /* Roasted dark */
+          #FD822C,  /* Roasted */
+          #FFCB1F,  /* Brew */
+          #9FDCED,  /* Iced light */
+          #2A7A8A,  /* Iced dark */
+          #BC5713
+        );
+        filter: blur(26px) saturate(1.05);
+        animation: hcf-aura-turn var(--hcf-aura-speed) linear infinite;
+        transition: filter 0.45s ease;
+      }
+      @keyframes hcf-aura-turn { to { transform: rotate(1turn); } }
+
+      /* Frosted glass pane sitting on top of the color current */
+      .hcf-glass-btn__frost {
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        border-radius: inherit;
+        background: rgba(255, 255, 255, var(--hcf-frost));
+        -webkit-backdrop-filter: blur(14px) saturate(1.35);
+        backdrop-filter: blur(14px) saturate(1.35);
+        border: 1px solid rgba(255, 255, 255, 0.72);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.9),
+          inset 0 -10px 24px -14px rgba(188, 87, 19, 0.25);
+        transition: background 0.45s ease;
+      }
+
+      /* Specular sweep across the glass on hover */
+      .hcf-glass-btn__shine {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        border-radius: inherit;
+        background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, 0.5) 50%, transparent 58%);
+        transform: translateX(-130%);
+        transition: transform 0.8s ease;
+        pointer-events: none;
+      }
+
+      .hcf-glass-btn__label {
+        position: relative;
+        z-index: 2;
+      }
+
+      @media (hover: hover) {
+        .hcf-glass-btn:hover {
+          transform: translateY(-2px);
+          box-shadow:
+            0 2px 4px rgba(22, 19, 16, 0.10),
+            0 18px 38px -16px rgba(253, 130, 44, 0.55),
+            0 8px 24px -12px rgba(42, 122, 138, 0.35);
+        }
+        .hcf-glass-btn:hover .hcf-glass-btn__frost {
+          background: rgba(255, 255, 255, calc(var(--hcf-frost) - 0.28));
+        }
+        .hcf-glass-btn:hover .hcf-glass-btn__aura {
+          filter: blur(22px) saturate(1.4);
+        }
+        .hcf-glass-btn:hover .hcf-glass-btn__shine {
+          transform: translateX(130%);
+        }
+      }
+      /* On touch, a press gives the same color surge */
+      .hcf-glass-btn:active .hcf-glass-btn__frost {
+        background: rgba(255, 255, 255, calc(var(--hcf-frost) - 0.28));
+      }
+      .hcf-glass-btn:active { transform: translateY(0) scale(0.99); }
+      .hcf-glass-btn:focus-visible { outline: 2px solid #FD822C; outline-offset: 3px; }
+
+      /* Variant: Prism Ring — color shows as a crisp moving border ring */
+      .hcf-glass-btn--ring { --hcf-frost: 0.9; }
+      .hcf-glass-btn--ring .hcf-glass-btn__aura { filter: blur(8px) saturate(1.15); }
+      .hcf-glass-btn--ring .hcf-glass-btn__frost {
+        inset: 2.5px;
+        border-radius: calc(var(--hcf-radius) - 2.5px);
+      }
+      @media (hover: hover) {
+        .hcf-glass-btn--ring:hover .hcf-glass-btn__aura { filter: blur(7px) saturate(1.4); }
+      }
+
+      /* Variant: Molten — thinner frost, richer color at rest */
+      .hcf-glass-btn--molten { --hcf-frost: 0.40; }
+      .hcf-glass-btn--molten .hcf-glass-btn__aura { filter: blur(24px) saturate(1.25); }
+
+      /* Fallback for browsers without backdrop-filter (rare) */
+      @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+        .hcf-glass-btn__frost { background: rgba(255, 255, 255, 0.82); }
+        .hcf-glass-btn:hover .hcf-glass-btn__frost,
+        .hcf-glass-btn:active .hcf-glass-btn__frost { background: rgba(255, 255, 255, 0.55); }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .hcf-glass-btn__aura { animation: none; }
+        .hcf-glass-btn__shine { display: none; }
+        .hcf-glass-btn,
+        .hcf-glass-btn__frost { transition: none; }
+      }
+    {% endstyle %}
+  {%- endif -%}
+{%- endif -%}

@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Customize It — Liquid Glass Button · Hot Cup Factory</title>
+<style>
+  /* HCF design system tokens (from hcfdesignsystem_12) */
+  :root {
+    --roasted-d: #BC5713;
+    --roasted-m: #FD822C;
+    --roasted-l: #FFCCA9;
+    --roasted-xl: #FDEEE3;
+    --brew-d: #D8A105;
+    --brew-m: #FFCB1F;
+    --brew-l: #FFEDCA;
+    --iced-d: #2A7A8A;
+    --iced-m: #9FDCED;
+    --iced-l: #CFF0F8;
+    --hcf-ink: #161310;
+    --hcf-w: #FBFBFB;
+    --sans: 'DM Sans', system-ui, -apple-system, "Segoe UI", sans-serif;
+    --display: 'Fraunces', Georgia, serif;
+
+    /* demo chrome */
+    --bg: var(--hcf-w);
+    --ink: var(--hcf-ink);
+    --muted: #6E6A66;
+    --card: #FFFFFF;
+    --line: #EAE7E3;
+    --accent: var(--roasted-d);
+    --chip-bg: var(--roasted-xl);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #191513;
+      --ink: #F4F3F1;
+      --muted: #A8A29C;
+      --card: #241F1C;
+      --line: #383230;
+      --accent: var(--roasted-m);
+      --chip-bg: #2E2825;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #191513;
+    --ink: #F4F3F1;
+    --muted: #A8A29C;
+    --card: #241F1C;
+    --line: #383230;
+    --accent: var(--roasted-m);
+    --chip-bg: #2E2825;
+  }
+  :root[data-theme="light"] {
+    --bg: var(--hcf-w);
+    --ink: var(--hcf-ink);
+    --muted: #6E6A66;
+    --card: #FFFFFF;
+    --line: #EAE7E3;
+    --accent: var(--roasted-d);
+    --chip-bg: var(--roasted-xl);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.55;
+  }
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 56px 20px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 56px;
+  }
+
+  .eyebrow {
+    margin: 0 0 14px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  h1 {
+    margin: 0 0 14px;
+    font-family: var(--display);
+    font-size: clamp(32px, 4.5vw, 46px);
+    line-height: 1.12;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  .lede {
+    margin: 0;
+    max-width: 60ch;
+    font-size: 17px;
+    color: var(--muted);
+  }
+  .lede strong { color: var(--ink); font-weight: 600; }
+  h2 {
+    margin: 0 0 6px;
+    font-family: var(--display);
+    font-size: 24px;
+    font-weight: 600;
+  }
+  .section-sub {
+    margin: 0 0 24px;
+    color: var(--muted);
+    font-size: 15px;
+    max-width: 62ch;
+  }
+
+  /* ============================================================
+     THE BUTTON — same classes and markup as the production snippet
+     Color current: Roasted dark → Roasted → Brew → Iced light → Iced dark
+     ============================================================ */
+  .hcf-customize-it-container { margin: 14px 0; }
+
+  .hcf-glass-btn {
+    --hcf-aura-speed: 14s;
+    --hcf-frost: 0.62;
+    --hcf-radius: 12px;
+
+    position: relative;
+    z-index: 0;
+    isolation: isolate;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 58px;
+    padding: 16px 32px;
+    border-radius: var(--hcf-radius);
+    overflow: hidden;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 15px;
+    color: #161310;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+    box-shadow:
+      0 1px 3px rgba(22, 19, 16, 0.12),
+      0 10px 26px -14px rgba(188, 87, 19, 0.40);
+    transition: transform 0.35s ease, box-shadow 0.35s ease;
+  }
+
+  /* Slow-turning current of brand color, blurred into a liquid wash */
+  .hcf-glass-btn__aura {
+    position: absolute;
+    z-index: -2;
+    left: 50%;
+    top: 50%;
+    width: max(170%, 480px);
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 20deg,
+      #BC5713,  /* Roasted dark */
+      #FD822C,  /* Roasted */
+      #FFCB1F,  /* Brew */
+      #9FDCED,  /* Iced light */
+      #2A7A8A,  /* Iced dark */
+      #BC5713
+    );
+    filter: blur(26px) saturate(1.05);
+    animation: hcf-aura-turn var(--hcf-aura-speed) linear infinite;
+    transition: filter 0.45s ease;
+  }
+  @keyframes hcf-aura-turn { to { transform: rotate(1turn); } }
+
+  /* Frosted glass pane sitting on top of the color current */
+  .hcf-glass-btn__frost {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: rgba(255, 255, 255, var(--hcf-frost));
+    -webkit-backdrop-filter: blur(14px) saturate(1.35);
+    backdrop-filter: blur(14px) saturate(1.35);
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      inset 0 -10px 24px -14px rgba(188, 87, 19, 0.25);
+    transition: background 0.45s ease;
+  }
+
+  /* Specular sweep across the glass on hover */
+  .hcf-glass-btn__shine {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, 0.5) 50%, transparent 58%);
+    transform: translateX(-130%);
+    transition: transform 0.8s ease;
+    pointer-events: none;
+  }
+
+  .hcf-glass-btn__label {
+    position: relative;
+    z-index: 2;
+  }
+
+  @media (hover: hover) {
+    .hcf-glass-btn:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 2px 4px rgba(22, 19, 16, 0.10),
+        0 18px 38px -16px rgba(253, 130, 44, 0.55),
+        0 8px 24px -12px rgba(42, 122, 138, 0.35);
+    }
+    .hcf-glass-btn:hover .hcf-glass-btn__frost {
+      background: rgba(255, 255, 255, calc(var(--hcf-frost) - 0.28));
+    }
+    .hcf-glass-btn:hover .hcf-glass-btn__aura {
+      filter: blur(22px) saturate(1.4);
+    }
+    .hcf-glass-btn:hover .hcf-glass-btn__shine {
+      transform: translateX(130%);
+    }
+  }
+  /* On touch, a press gives the same color surge */
+  .hcf-glass-btn:active .hcf-glass-btn__frost {
+    background: rgba(255, 255, 255, calc(var(--hcf-frost) - 0.28));
+  }
+  .hcf-glass-btn:active { transform: translateY(0) scale(0.99); }
+  .hcf-glass-btn:focus-visible { outline: 2px solid #FD822C; outline-offset: 3px; }
+
+  /* Variant: Prism Ring — clear pane, the current shows as a crisp moving border */
+  .hcf-glass-btn--ring { --hcf-frost: 0.9; }
+  .hcf-glass-btn--ring .hcf-glass-btn__aura { filter: blur(8px) saturate(1.15); }
+  .hcf-glass-btn--ring .hcf-glass-btn__frost {
+    inset: 2.5px;
+    border-radius: calc(var(--hcf-radius) - 2.5px);
+  }
+  @media (hover: hover) {
+    .hcf-glass-btn--ring:hover .hcf-glass-btn__aura { filter: blur(7px) saturate(1.4); }
+  }
+
+  /* Variant: Molten — more color at rest, maximum attention */
+  .hcf-glass-btn--molten { --hcf-frost: 0.40; }
+  .hcf-glass-btn--molten .hcf-glass-btn__aura { filter: blur(24px) saturate(1.25); }
+
+  /* Fallback for browsers without backdrop-filter (rare) */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .hcf-glass-btn__frost { background: rgba(255, 255, 255, 0.82); }
+    .hcf-glass-btn:hover .hcf-glass-btn__frost,
+    .hcf-glass-btn:active .hcf-glass-btn__frost { background: rgba(255, 255, 255, 0.55); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hcf-glass-btn__aura { animation: none; }
+    .hcf-glass-btn__shine { display: none; }
+    .hcf-glass-btn,
+    .hcf-glass-btn__frost { transition: none; }
+  }
+
+  /* ============================================================
+     Demo chrome
+     ============================================================ */
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .chip {
+    border: 1px solid var(--line);
+    background: var(--chip-bg);
+    color: var(--ink);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+  .chip[aria-pressed="true"] {
+    border-color: var(--accent);
+    background: var(--card);
+    color: var(--accent);
+  }
+  .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Simulated Hot Cup Factory product page — stays white on purpose */
+  .pdp {
+    background: #FFFFFF;
+    color: #161310;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 34px 26px 30px;
+    max-width: 560px;
+    margin: 0 auto;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.10);
+  }
+  .pdp__title {
+    margin: 0 0 10px;
+    font-size: 21px;
+    line-height: 1.3;
+    font-weight: 600;
+    text-align: center;
+  }
+  .pdp__price {
+    margin: 0 0 22px;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 600;
+    color: #BC5713;
+  }
+  .pdp__option {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border: 1.5px solid #FD822C;
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 22px;
+    font-size: 16px;
+  }
+  .pdp__radio {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #FD822C;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+  }
+  .pdp__radio::after {
+    content: "";
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #FD822C;
+  }
+  .pdp__option strong { display: block; font-weight: 600; }
+  .pdp__option span { color: #6E6A66; font-size: 15px; }
+  .pdp__cart {
+    display: flex;
+    margin-top: 12px;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .pdp__qty {
+    flex: 0 0 100px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    background: #FDEEE3;
+    color: #161310;
+    font-size: 17px;
+  }
+  .pdp__atc {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 54px;
+    background: #FD822C;
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .stage-note {
+    margin: 16px auto 0;
+    max-width: 560px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13.5px;
+  }
+
+  .variant-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+  }
+  .variant-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .variant-card .hcf-customize-it-container { margin: 4px 0 14px; }
+  .variant-card h3 { margin: 0; font-size: 16px; font-weight: 700; }
+  .variant-card h3 .tag {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-left: 8px;
+  }
+  .variant-card p { margin: 0; font-size: 14px; color: var(--muted); }
+  .variant-card .pane {
+    background: #FFFFFF;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 6px 16px;
+  }
+
+  .notes { display: flex; flex-direction: column; gap: 4px; }
+  .notes ul {
+    margin: 8px 0 0;
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 15px;
+  }
+  .notes li { color: var(--muted); }
+  .notes li strong { color: var(--ink); font-weight: 600; }
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.88em;
+    background: var(--chip-bg);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 1px 6px;
+  }
+</style>
+
+</head>
+<body>
+<main class="page">
+  <header>
+    <p class="eyebrow">Hot Cup Factory · Product page CTA concept</p>
+    <h1>“Customize It,” poured in glass</h1>
+    <p class="lede">A frosted pane of liquid glass sitting on a <strong>slow-turning current of brand color</strong> — Roasted dark into Roasted orange, a bright pass of Brew yellow, then a cool sweep of Iced blue. The current is always moving to catch the eye; on <strong>hover or press, the frost thins and the color surges through</strong>, with a light sweep across the glass. Pure CSS, no images, no libraries.</p>
+  </header>
+
+  <section>
+    <h2>In context</h2>
+    <p class="section-sub">A simulation of your product page. Pick a variant, then hover (or tap) the button.</p>
+    <div class="chips">
+      <button class="chip" data-variant="" aria-pressed="true" type="button">Frosted Bloom · recommended</button>
+      <button class="chip" data-variant="hcf-glass-btn--ring" aria-pressed="false" type="button">Prism Ring</button>
+      <button class="chip" data-variant="hcf-glass-btn--molten" aria-pressed="false" type="button">Molten</button>
+    </div>
+
+    <div class="pdp">
+      <p class="pdp__title">UNIQ 8 oz Double Wall White Paper Coffee Cups&nbsp;–&nbsp;500/Case</p>
+      <p class="pdp__price">$99.99</p>
+      <div class="pdp__option">
+        <span class="pdp__radio" aria-hidden="true"></span>
+        <span><strong>One-Time Purchase</strong><span>$99.99</span></span>
+      </div>
+
+      <div class="hcf-customize-it-container">
+        <a href="#" class="hcf-glass-btn" id="stage-btn" onclick="return false;">
+          <span class="hcf-glass-btn__aura" aria-hidden="true"></span>
+          <span class="hcf-glass-btn__frost" aria-hidden="true"></span>
+          <span class="hcf-glass-btn__shine" aria-hidden="true"></span>
+          <span class="hcf-glass-btn__label">Customize It</span>
+        </a>
+      </div>
+
+      <div class="pdp__cart" aria-hidden="true">
+        <div class="pdp__qty"><span>−</span><span>1</span><span>+</span></div>
+        <div class="pdp__atc">Add to Cart</div>
+      </div>
+    </div>
+    <p class="stage-note">The color current always drifts slowly — that's the attention hook on mobile, where there's no hover. Press the button on a phone and the color surges the same way hover does on desktop.</p>
+  </section>
+
+  <section>
+    <h2>Three intensities</h2>
+    <p class="section-sub">Same code, one class swap apart. All three use the identical moving current underneath — they differ only in how much frost sits on top of it.</p>
+    <div class="variant-grid">
+      <div class="variant-card">
+        <div class="pane">
+          <div class="hcf-customize-it-container">
+            <a href="#" class="hcf-glass-btn" onclick="return false;">
+              <span class="hcf-glass-btn__aura" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__frost" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__shine" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__label">Customize It</span>
+            </a>
+          </div>
+        </div>
+        <h3>Frosted Bloom<span class="tag">Recommended</span></h3>
+        <p>Soft pastel wash at rest — modern and premium without shouting over Add to Cart. Hover blooms the full color through the glass.</p>
+      </div>
+      <div class="variant-card">
+        <div class="pane">
+          <div class="hcf-customize-it-container">
+            <a href="#" class="hcf-glass-btn hcf-glass-btn--ring" onclick="return false;">
+              <span class="hcf-glass-btn__aura" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__frost" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__shine" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__label">Customize It</span>
+            </a>
+          </div>
+        </div>
+        <h3>Prism Ring</h3>
+        <p>Closest to your current button: the moving color lives in a crisp border ring around near-clear glass, then floods the interior on hover.</p>
+      </div>
+      <div class="variant-card">
+        <div class="pane">
+          <div class="hcf-customize-it-container">
+            <a href="#" class="hcf-glass-btn hcf-glass-btn--molten" onclick="return false;">
+              <span class="hcf-glass-btn__aura" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__frost" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__shine" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__label">Customize It</span>
+            </a>
+          </div>
+        </div>
+        <h3>Molten</h3>
+        <p>Thinner frost, richer color at rest. Maximum attention — best if Customize It should outrank everything else on the page.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="notes">
+    <h2>Feasibility &amp; build notes</h2>
+    <ul>
+      <li><strong>Fully feasible, pure CSS.</strong> A rotating conic-gradient of your brand colors is blurred into a liquid wash behind a translucent pane with <code>backdrop-filter</code>. No images, no JavaScript, no apps — one Liquid snippet.</li>
+      <li><strong>On brand, per the new design system.</strong> The current runs Roasted dark → Roasted → Brew → Iced light → Iced dark, weighted warm with one cool pass. Label is Ink, focus ring is Roasted, radius and shadows follow the token scale. One flag: the guide scopes Iced teal to cold-product sections — here it appears only as a moving accent inside the glass, which reads intentional, but it's a one-line change to drop it if you want to stay strictly warm.</li>
+      <li><strong>Why the color lives inside the glass:</strong> on your white product pages a plain frosted blur would be invisible (blurred white is white). Giving the glass its own internal color current is what creates the liquid-glass depth — and it's what lets the color move.</li>
+      <li><strong>Browser support:</strong> works in all current Chrome, Safari, Edge and Firefox (with the <code>-webkit-</code> prefix included for Safari). A clean solid-frost fallback is included for anything older.</li>
+      <li><strong>Respectful motion:</strong> the rotation is a 14-second drift, not a spin, and it fully honors <code>prefers-reduced-motion</code>. Speed is one variable: <code>--hcf-aura-speed</code>.</li>
+      <li><strong>Drop-in install:</strong> the production version keeps your existing <code>custom.customize_it_product</code> metafield logic — same trigger, same link target. It replaces the old block in <code>snippets/product-template.liquid</code> with one <code>{&#37; render &#37;}</code> line.</li>
+      <li><strong>Small upgrade included:</strong> the old markup nested a <code>&lt;button&gt;</code> inside an <code>&lt;a&gt;</code> (invalid HTML). The new version is a single styled link with a proper aria-label and focus state.</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+  (function () {
+    var chips = document.querySelectorAll('.chip');
+    var btn = document.getElementById('stage-btn');
+    chips.forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        chips.forEach(function (c) { c.setAttribute('aria-pressed', c === chip ? 'true' : 'false'); });
+        btn.className = 'hcf-glass-btn' + (chip.dataset.variant ? ' ' + chip.dataset.variant : '');
+      });
+    });
+  })();
+</script>
+</body>
+
+</html>
