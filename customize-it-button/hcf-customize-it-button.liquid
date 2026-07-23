@@ -8,15 +8,18 @@
 
   Ports UNIQ Supply's "Design Online" designer button onto Hot Cup Factory
   as an upgraded glass CTA. Renders only when the product has BOTH
-  customizer.type and customizer.size metafields set, and links to the
-  online designer at /pages/custom-designer with brand/type/size as query
-  params — same gating and URL shape as UNIQ's button.
+  customizer.type and customizer.size metafields set.
+
+  The designer app is hosted on UNIQ Supply
+  (uniqsupply.com/pages/custom-designer) and is brand-aware: passing
+  brand=hcf re-skins it to Hot Cup Factory (confirmed working). The button
+  therefore links CROSS-DOMAIN to UNIQ with brand=hcf — HCF does NOT need
+  its own designer page. It opens in a new tab so the shopper keeps their
+  HCF product page.
 
   PREREQUISITES on Hot Cup Factory (needed for the button to appear/work):
     - Metafield definitions customizer.type and customizer.size, populated
-      per product (e.g. single-wall / 16oz — see UNIQ for the value set).
-    - A /pages/custom-designer page wired to the designer app for HCF.
-    - The correct brand token (cz_brand below) for HCF in that app.
+      per product (e.g. single-wall / 12oz — match UNIQ's value tokens).
 
   INSTALL (on the HCF draft theme)
   1. Save this file as snippets/hcf-customize-it-button.liquid
@@ -70,17 +73,20 @@
 {%- assign cz_type = product.metafields.customizer.type -%}
 {%- assign cz_size = product.metafields.customizer.size -%}
 {%- comment -%}
-  Brand token the /pages/custom-designer app expects. UNIQ Supply's version
-  uses 'uniq'; set this to whatever the designer registers Hot Cup Factory as.
-  CONFIRM this value before going live — a wrong token breaks the designer link.
+  The designer is hosted on UNIQ Supply and is brand-aware. brand=hcf
+  re-skins it to Hot Cup Factory (confirmed working). Only change
+  cz_designer_base if you later host the designer on hotcupfactory.com.
 {%- endcomment -%}
 {%- assign cz_brand = 'hcf' -%}
+{%- assign cz_designer_base = 'https://uniqsupply.com/pages/custom-designer' -%}
 {%- if cz_type != blank and cz_size != blank -%}
     <div class="hcf-customize-it-container">
       <a
-        href="/pages/custom-designer?brand={{ cz_brand }}&type={{ cz_type | url_encode }}&size={{ cz_size | url_encode }}"
+        href="{{ cz_designer_base }}?brand={{ cz_brand }}&type={{ cz_type | url_encode }}&size={{ cz_size | url_encode }}"
         class="hcf-glass-btn"
-        aria-label="Design your custom {{ product.title | escape }} online"
+        target="_blank"
+        rel="noopener"
+        aria-label="Design your custom {{ product.title | escape }} online (opens in a new tab)"
       >
         <span class="hcf-glass-btn__aura" aria-hidden="true"></span>
         <span class="hcf-glass-btn__frost" aria-hidden="true"></span>

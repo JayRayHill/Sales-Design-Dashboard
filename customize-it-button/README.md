@@ -34,22 +34,28 @@ the glass; pick Roasted, Brew, or Roasted + Brew to stay strictly warm.
 ## What this is
 
 This ports UNIQ Supply's "Design Online" designer button onto Hot Cup
-Factory as an upgraded glass CTA. On UNIQ, the button reads the
-`customizer.type` / `customizer.size` product metafields and links to an
-online designer at `/pages/custom-designer?brand=…&type=…&size=…`. This
-snippet reproduces that flow with the glass styling.
+Factory as an upgraded glass CTA. It reads the `customizer.type` /
+`customizer.size` product metafields and links to the online designer with
+`brand`/`type`/`size` as query params, reproducing UNIQ's flow with the
+glass styling.
+
+The designer app is hosted on **UNIQ Supply**
+(`uniqsupply.com/pages/custom-designer`) and is **brand-aware** — passing
+`brand=hcf` re-skins it to Hot Cup Factory (confirmed working). So the
+button links cross-domain to UNIQ; **HCF does not need its own designer
+page.** The link opens in a new tab so the shopper keeps their HCF product
+page. If you later host the designer on `hotcupfactory.com`, just change
+`cz_designer_base` in the snippet.
 
 ## Prerequisites on Hot Cup Factory
 
 The button only appears when these are in place on HCF:
 
 1. **Metafield definitions** `customizer.type` and `customizer.size`, defined
-   and populated per product (mirror UNIQ's value set — e.g. `single-wall`,
-   `16oz`). The button renders only when **both** are set on a product.
-2. **A `/pages/custom-designer` page** wired to the designer app for HCF.
-3. **The correct brand token** — UNIQ passes `brand=uniq`. Set `cz_brand` in
-   the snippet to whatever the designer registers HCF as (defaults to `hcf`;
-   **confirm before going live**).
+   and populated per product (mirror UNIQ's value tokens — e.g. `single-wall`,
+   `12oz`). The button renders only when **both** are set on a product.
+2. That's it for the connection — the UNIQ-hosted app already recognizes
+   `brand=hcf`.
 
 ## Install (HCF draft theme)
 
