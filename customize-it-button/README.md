@@ -92,7 +92,13 @@ Color ranges (combine freely with any finish; default is the full brand run):
 
 Each range also retunes the button's glow/shadow colors to match.
 
-Depth (combine freely with any finish and color range; default is flush):
+Texture (default is frosted):
+
+- `hcf-glass-btn--liquid` — clear "liquid glass": a thin wet film instead of
+  the milky frost, vivid color underneath, and a permanent gloss highlight
+
+Depth (combine freely with any finish, color range, and texture; default is
+flush):
 
 - `hcf-glass-btn--raised` — a clear step off the page: layered shadow,
   top-lit pane, higher lift on hover

@@ -35,6 +35,10 @@
     hcf-glass-btn--iced     blue only
     hcf-glass-btn--sunrise  orange + yellow, no cool tones
 
+  Optional texture — the character of the glass (default is frosted):
+    hcf-glass-btn--liquid   clear "liquid glass": thin wet film, vivid
+                            color, permanent gloss highlight
+
   Optional depth — how far the glass steps off the page (default is flush):
     hcf-glass-btn--raised   layered shadow, top-lit pane, higher hover lift
     hcf-glass-btn--domed    3D lens: glare cap, beveled edge, deep shadow,
@@ -230,6 +234,45 @@
         --hcf-glow-a: rgba(253, 130, 44, 0.55);
         --hcf-glow-b: rgba(255, 203, 31, 0.40);
         --hcf-tint: rgba(188, 87, 19, 0.25);
+      }
+
+      /* Texture — Frosted (default) vs Liquid glass: clear, wet, vivid */
+      .hcf-glass-btn--liquid { --hcf-frost: 0.22; }
+      .hcf-glass-btn--liquid .hcf-glass-btn__aura {
+        filter: blur(18px) saturate(1.2);
+      }
+      .hcf-glass-btn--liquid .hcf-glass-btn__frost {
+        -webkit-backdrop-filter: blur(4px) saturate(1.5);
+        backdrop-filter: blur(4px) saturate(1.5);
+        border: 1px solid rgba(255, 255, 255, 0.85);
+        box-shadow:
+          inset 0 1px 1px rgba(255, 255, 255, 0.95),
+          inset 0 -1px 1px rgba(255, 255, 255, 0.35),
+          inset 0 0 18px rgba(255, 255, 255, 0.28);
+      }
+      /* Permanent wet gloss film over the clear glass */
+      .hcf-glass-btn--liquid::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        border-radius: inherit;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.50),
+          rgba(255, 255, 255, 0.08) 38%,
+          rgba(255, 255, 255, 0) 55%,
+          rgba(255, 255, 255, 0.18) 92%
+        );
+        pointer-events: none;
+      }
+      .hcf-glass-btn--liquid .hcf-glass-btn__label {
+        text-shadow: 0 1px 2px rgba(255, 255, 255, 0.55);
+      }
+      @media (hover: hover) {
+        .hcf-glass-btn--liquid:hover .hcf-glass-btn__aura {
+          filter: blur(16px) saturate(1.55);
+        }
       }
 
       /* Depth — how far the glass steps off the page. Default is Flush. */
