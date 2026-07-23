@@ -133,8 +133,9 @@
         text-decoration: none;
         text-transform: uppercase;
         letter-spacing: 0.2em;
+        font-family: inherit; /* inherit the theme font (--body-font-family) */
         font-weight: 700;
-        font-size: 15px;
+        font-size: var(--btn-text-size, 15px); /* theme's button text size; 15px fallback */
         color: var(--hcf-label);
         text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
         -webkit-tap-highlight-color: transparent;

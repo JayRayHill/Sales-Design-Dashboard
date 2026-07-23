@@ -25,6 +25,13 @@ Label is "Design Online" (UNIQ's proven label for this designer), Ink
 `#161310` text, focus ring Roasted `#FD822C`. The label is a single line in
 the snippet — swap freely, or A/B test against "Customize It".
 
+**Typography follows the theme:** `font-family: inherit` picks up the
+theme's body font, and `font-size: var(--btn-text-size, 15px)` uses the
+theme's own button text size (same variable `.btn` uses), so the label
+tracks your theme settings rather than a fixed size. The uppercase +
+letter-spacing treatment is still set locally — remove those two lines if
+you'd rather match the theme's non-uppercase buttons.
+
 **Shipped configuration:** Prism Ring finish + Brisk 7s speed, with
 full-brand color, frosted texture, and flush depth (the defaults). Those
 two classes (`hcf-glass-btn--ring hcf-glass-btn--brisk`) are already on the
