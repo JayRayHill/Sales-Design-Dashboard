@@ -640,8 +640,8 @@
       <div class="chip-group">
         <span class="chip-label">Finish</span>
         <div class="chips">
-          <button class="chip" data-group="finish" data-variant="" aria-pressed="true" type="button">Frosted Bloom</button>
-          <button class="chip" data-group="finish" data-variant="hcf-glass-btn--ring" aria-pressed="false" type="button">Prism Ring</button>
+          <button class="chip" data-group="finish" data-variant="" aria-pressed="false" type="button">Frosted Bloom</button>
+          <button class="chip" data-group="finish" data-variant="hcf-glass-btn--ring" aria-pressed="true" type="button">Prism Ring</button>
           <button class="chip" data-group="finish" data-variant="hcf-glass-btn--molten" aria-pressed="false" type="button">Molten</button>
         </div>
       </div>
@@ -666,8 +666,8 @@
       <div class="chip-group">
         <span class="chip-label">Speed</span>
         <div class="chips">
-          <button class="chip" data-group="speed" data-variant="" aria-pressed="true" type="button">Drift · 10s</button>
-          <button class="chip" data-group="speed" data-variant="hcf-glass-btn--brisk" aria-pressed="false" type="button">Brisk · 7s</button>
+          <button class="chip" data-group="speed" data-variant="" aria-pressed="false" type="button">Drift · 10s</button>
+          <button class="chip" data-group="speed" data-variant="hcf-glass-btn--brisk" aria-pressed="true" type="button">Brisk · 7s</button>
           <button class="chip" data-group="speed" data-variant="hcf-glass-btn--lively" aria-pressed="false" type="button">Lively · 4s</button>
         </div>
       </div>
@@ -690,7 +690,7 @@
       </div>
 
       <div class="hcf-customize-it-container">
-        <a href="#" class="hcf-glass-btn" id="stage-btn" onclick="return false;">
+        <a href="#" class="hcf-glass-btn hcf-glass-btn--ring hcf-glass-btn--brisk" id="stage-btn" onclick="return false;">
           <span class="hcf-glass-btn__aura" aria-hidden="true"></span>
           <span class="hcf-glass-btn__frost" aria-hidden="true"></span>
           <span class="hcf-glass-btn__shine" aria-hidden="true"></span>
@@ -998,7 +998,7 @@
   (function () {
     var chips = document.querySelectorAll('.chip');
     var btn = document.getElementById('stage-btn');
-    var picks = { finish: '', palette: '', texture: '', speed: '', depth: '' };
+    var picks = { finish: 'hcf-glass-btn--ring', palette: '', texture: '', speed: 'hcf-glass-btn--brisk', depth: '' };
     chips.forEach(function (chip) {
       chip.addEventListener('click', function () {
         var group = chip.dataset.group;

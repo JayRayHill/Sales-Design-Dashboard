@@ -25,6 +25,11 @@ Label is "Design Online" (UNIQ's proven label for this designer), Ink
 `#161310` text, focus ring Roasted `#FD822C`. The label is a single line in
 the snippet — swap freely, or A/B test against "Customize It".
 
+**Shipped configuration:** Prism Ring finish + Brisk 7s speed, with
+full-brand color, frosted texture, and flush depth (the defaults). Those
+two classes (`hcf-glass-btn--ring hcf-glass-btn--brisk`) are already on the
+`<a>` in the snippet — change them to restyle.
+
 Four alternate color ranges ship as one-class swaps (see Tuning below):
 Roasted only, Brew only, Iced only, and Roasted + Brew ("sunrise", no cool
 tones). Note: the design system scopes Iced teal to cold-product sections —

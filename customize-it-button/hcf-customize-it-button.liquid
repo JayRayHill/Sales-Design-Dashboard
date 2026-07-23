@@ -10,6 +10,10 @@
   as an upgraded glass CTA. Renders only when the product has BOTH
   customizer.type and customizer.size metafields set.
 
+  SHIPPED CONFIG (classes on the <a> below): Prism Ring + Brisk 7s, with
+  full-brand color, frosted texture, flush depth (the defaults). To change
+  the look, swap the variant classes — see the option lists further down.
+
   The designer app is hosted on UNIQ Supply
   (uniqsupply.com/pages/custom-designer) and is brand-aware: passing
   brand=hcf re-skins it to Hot Cup Factory (confirmed working). The button
@@ -81,9 +85,10 @@
 {%- assign cz_designer_base = 'https://uniqsupply.com/pages/custom-designer' -%}
 {%- if cz_type != blank and cz_size != blank -%}
     <div class="hcf-customize-it-container">
+      {%- comment -%} Shipped config: Prism Ring finish + Brisk 7s speed (full brand, frosted, flush) {%- endcomment -%}
       <a
         href="{{ cz_designer_base }}?brand={{ cz_brand }}&type={{ cz_type | url_encode }}&size={{ cz_size | url_encode }}"
-        class="hcf-glass-btn"
+        class="hcf-glass-btn hcf-glass-btn--ring hcf-glass-btn--brisk"
         target="_blank"
         rel="noopener"
         aria-label="Design your custom {{ product.title | escape }} online (opens in a new tab)"
