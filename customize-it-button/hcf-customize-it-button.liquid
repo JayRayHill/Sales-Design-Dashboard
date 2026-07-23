@@ -106,7 +106,7 @@
       .hcf-glass-btn {
         --hcf-aura-speed: 10s;
         --hcf-frost: 0.62;
-        --hcf-radius: calc(var(--btn-border-radius, 4px) + 4px); /* theme radius + extra rounding (tune the +4px). Frost stays concentric so the ring is even */
+        --hcf-radius: var(--btn-border-radius, 4px); /* match the theme button radius exactly; frost stays concentric so the ring is even */
         --hcf-label: #161310; /* Ink */
         /* Color current — Full brand by default */
         --hcf-c1: #BC5713;
