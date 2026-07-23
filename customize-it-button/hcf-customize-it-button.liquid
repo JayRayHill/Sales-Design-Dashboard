@@ -36,8 +36,14 @@
     hcf-glass-btn--sunrise  orange + yellow, no cool tones
 
   Optional texture — the character of the glass (default is frosted):
+    hcf-glass-btn--satin    semi-sheer middle ground: color present at
+                            rest but gently hazed, soft top sheen
     hcf-glass-btn--liquid   clear "liquid glass": thin wet film, vivid
                             color, permanent gloss highlight
+
+  Hover behavior matches the Canopy theme's default buttons: a 104deg
+  diagonal wipe (background-position slide, 0.4s ease-out) — here the
+  frost wipes away to reveal the color current.
 
   Optional depth — how far the glass steps off the page (default is flush):
     hcf-glass-btn--raised   layered shadow, top-lit pane, higher hover lift
@@ -139,14 +145,22 @@
         inset: 0;
         z-index: -1;
         border-radius: inherit;
-        background: rgba(255, 255, 255, var(--hcf-frost));
+        /* Canopy-style 104° wipe: oversized two-stop gradient; hover slides it
+           so the frost wipes away with the same angled sweep as theme buttons */
+        background: linear-gradient(
+            104deg,
+            rgba(255, 255, 255, calc(var(--hcf-frost) - 0.30)) 60%,
+            rgba(255, 255, 255, var(--hcf-frost)) 60%
+          )
+          no-repeat 100% 100%;
+        background-size: 300% 100%;
         -webkit-backdrop-filter: blur(14px) saturate(1.35);
         backdrop-filter: blur(14px) saturate(1.35);
         border: 1px solid rgba(255, 255, 255, 0.72);
         box-shadow:
           inset 0 1px 0 rgba(255, 255, 255, 0.9),
           inset 0 -10px 24px -14px var(--hcf-tint);
-        transition: background 0.45s ease;
+        transition: background-position 0.4s ease-out;
       }
 
       /* Specular sweep across the glass on hover */
@@ -175,7 +189,7 @@
             0 8px 24px -12px var(--hcf-glow-b);
         }
         .hcf-glass-btn:hover .hcf-glass-btn__frost {
-          background: rgba(255, 255, 255, calc(var(--hcf-frost) - 0.28));
+          background-position: 0 100%;
         }
         .hcf-glass-btn:hover .hcf-glass-btn__aura {
           filter: blur(22px) saturate(1.4);
@@ -184,9 +198,9 @@
           transform: translateX(130%);
         }
       }
-      /* On touch, a press gives the same color surge */
+      /* On touch, a press gives the same wipe */
       .hcf-glass-btn:active .hcf-glass-btn__frost {
-        background: rgba(255, 255, 255, calc(var(--hcf-frost) - 0.28));
+        background-position: 0 100%;
       }
       .hcf-glass-btn:active { transform: translateY(0) scale(0.99); }
       .hcf-glass-btn:focus-visible { outline: 2px solid #FD822C; outline-offset: 3px; }
@@ -234,6 +248,33 @@
         --hcf-glow-a: rgba(253, 130, 44, 0.55);
         --hcf-glow-b: rgba(255, 203, 31, 0.40);
         --hcf-tint: rgba(188, 87, 19, 0.25);
+      }
+
+      /* Texture: Satin — halfway between frosted and liquid glass */
+      .hcf-glass-btn--satin { --hcf-frost: 0.45; }
+      .hcf-glass-btn--satin .hcf-glass-btn__aura { filter: blur(22px) saturate(1.12); }
+      .hcf-glass-btn--satin .hcf-glass-btn__frost {
+        -webkit-backdrop-filter: blur(9px) saturate(1.4);
+        backdrop-filter: blur(9px) saturate(1.4);
+        border: 1px solid rgba(255, 255, 255, 0.78);
+      }
+      .hcf-glass-btn--satin::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        border-radius: inherit;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.30),
+          rgba(255, 255, 255, 0.05) 40%,
+          rgba(255, 255, 255, 0) 60%
+        );
+        pointer-events: none;
+      }
+      .hcf-glass-btn--satin .hcf-glass-btn__label { text-shadow: 0 1px 1px rgba(255, 255, 255, 0.45); }
+      @media (hover: hover) {
+        .hcf-glass-btn--satin:hover .hcf-glass-btn__aura { filter: blur(20px) saturate(1.45); }
       }
 
       /* Texture — Frosted (default) vs Liquid glass: clear, wet, vivid */
@@ -285,13 +326,19 @@
           0 6px 12px -4px rgba(22, 19, 16, 0.12),
           0 16px 32px -14px var(--hcf-glow-rest);
       }
-      .hcf-glass-btn--raised .hcf-glass-btn__frost,
-      .hcf-glass-btn--domed .hcf-glass-btn__frost {
+      .hcf-glass-btn--raised .hcf-glass-btn__frost::before,
+      .hcf-glass-btn--domed .hcf-glass-btn__frost::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
         background: linear-gradient(
           180deg,
-          rgba(255, 255, 255, calc(var(--hcf-frost) + 0.16)),
-          rgba(255, 255, 255, calc(var(--hcf-frost) - 0.10))
+          rgba(255, 255, 255, 0.20),
+          rgba(255, 255, 255, 0) 55%,
+          rgba(22, 19, 16, 0.05)
         );
+        pointer-events: none;
       }
 
       /* Domed: curved glare cap, beveled edge, deep stacked shadow */
@@ -344,9 +391,7 @@
 
       /* Fallback for browsers without backdrop-filter (rare) */
       @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-        .hcf-glass-btn__frost { background: rgba(255, 255, 255, 0.82); }
-        .hcf-glass-btn:hover .hcf-glass-btn__frost,
-        .hcf-glass-btn:active .hcf-glass-btn__frost { background: rgba(255, 255, 255, 0.55); }
+        .hcf-glass-btn { --hcf-frost: 0.85; }
       }
 
       @media (prefers-reduced-motion: reduce) {

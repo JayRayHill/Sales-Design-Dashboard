@@ -94,6 +94,9 @@ Each range also retunes the button's glow/shadow colors to match.
 
 Texture (default is frosted):
 
+- `hcf-glass-btn--satin` — semi-sheer middle ground between frosted and
+  liquid: color clearly present at rest but gently hazed, with a soft top
+  sheen
 - `hcf-glass-btn--liquid` — clear "liquid glass": a thin wet film instead of
   the milky frost, vivid color underneath, and a permanent gloss highlight
 
@@ -104,6 +107,15 @@ flush):
   top-lit pane, higher lift on hover
 - `hcf-glass-btn--domed` — full 3D lens: curved glare cap, beveled edge,
   deep stacked shadow, and a press-down on click
+
+## Hover behavior
+
+The hover mimics the Canopy rebrand theme's default buttons exactly: Canopy
+CTAs hover via a 104° diagonal color wipe — an oversized two-stop gradient
+whose `background-position` slides over 0.4s ease-out. This button uses the
+identical mechanism and timing, except what wipes away is the frost,
+revealing the moving color current underneath. It reads as family with
+every other button on the site.
 
 ## Accessibility & performance
 
