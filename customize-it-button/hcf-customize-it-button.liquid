@@ -106,7 +106,7 @@
       .hcf-glass-btn {
         --hcf-aura-speed: 10s;
         --hcf-frost: 0.62;
-        --hcf-radius: 12px;
+        --hcf-radius: var(--btn-border-radius, 4px); /* theme button radius */
         --hcf-label: #161310; /* Ink */
         /* Color current — Full brand by default */
         --hcf-c1: #BC5713;
@@ -126,16 +126,16 @@
         align-items: center;
         justify-content: center;
         width: 100%;
-        min-height: 58px;
-        padding: 16px 32px;
+        /* match the theme's .btn--primary box (Add to Cart) */
+        padding: calc(var(--btn-padding-y, 12px) + var(--btn-border-width, 1px)) calc(20px + var(--btn-border-width, 1px) * 2);
         border-radius: var(--hcf-radius);
         overflow: hidden;
         text-decoration: none;
-        text-transform: uppercase;
-        letter-spacing: 0.2em;
+        text-transform: var(--btn-text-transform, none); /* follow the theme's button casing */
         font-family: inherit; /* inherit the theme font (--body-font-family) */
         font-weight: 700;
         font-size: var(--btn-text-size, 15px); /* theme's button text size; 15px fallback */
+        line-height: 1.2em; /* match theme .btn */
         color: var(--hcf-label);
         text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
         -webkit-tap-highlight-color: transparent;

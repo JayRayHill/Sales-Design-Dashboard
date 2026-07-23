@@ -25,12 +25,24 @@ Label is "Design Online" (UNIQ's proven label for this designer), Ink
 `#161310` text, focus ring Roasted `#FD822C`. The label is a single line in
 the snippet — swap freely, or A/B test against "Customize It".
 
-**Typography follows the theme:** `font-family: inherit` picks up the
-theme's body font, and `font-size: var(--btn-text-size, 15px)` uses the
-theme's own button text size (same variable `.btn` uses), so the label
-tracks your theme settings rather than a fixed size. The uppercase +
-letter-spacing treatment is still set locally — remove those two lines if
-you'd rather match the theme's non-uppercase buttons.
+**The theme controls all structural settings** so the button reads as
+native; only the glass look (color current, frost, ring, hover wipe, glow)
+is custom. Specifically, these follow the theme's own button variables,
+each with a fallback:
+
+| Property | Bound to | Fallback |
+| --- | --- | --- |
+| Corner radius | `var(--btn-border-radius)` | 4px |
+| Padding / height | `var(--btn-padding-y)` + `var(--btn-border-width)` (matches `.btn--primary`) | 12px / 1px |
+| Font family | `inherit` (theme body font) | — |
+| Font size | `var(--btn-text-size)` | 15px |
+| Casing | `var(--btn-text-transform)` | none |
+| Line height | `1.2em` (theme `.btn` value) | — |
+
+Text color stays Ink (`--hcf-label`) rather than the theme's button text
+color, because the glass surface is light and needs dark text for contrast
+— that's part of the custom look, not a structural setting. Font weight is
+700, matching the theme's `.btn`.
 
 **Shipped configuration:** Prism Ring finish + Brisk 7s speed, with
 full-brand color, frosted texture, and flush depth (the defaults). Those
