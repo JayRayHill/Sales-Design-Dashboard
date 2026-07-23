@@ -149,7 +149,7 @@
            so the frost wipes away with the same angled sweep as theme buttons */
         background: linear-gradient(
             104deg,
-            rgba(255, 255, 255, calc(var(--hcf-frost) - 0.30)) 60%,
+            rgba(255, 255, 255, calc(var(--hcf-frost) - 0.52)) 60%,
             rgba(255, 255, 255, var(--hcf-frost)) 60%
           )
           no-repeat 100% 100%;
@@ -181,21 +181,10 @@
       }
 
       @media (hover: hover) {
-        .hcf-glass-btn:hover {
-          transform: translateY(-2px);
-          box-shadow:
-            0 2px 4px rgba(22, 19, 16, 0.10),
-            0 18px 38px -16px var(--hcf-glow-a),
-            0 8px 24px -12px var(--hcf-glow-b);
-        }
+        /* Pure Canopy hover: the wipe and nothing else — no lift, no glow
+           change, no sweep. One motion, one timing, same as theme buttons. */
         .hcf-glass-btn:hover .hcf-glass-btn__frost {
           background-position: 0 100%;
-        }
-        .hcf-glass-btn:hover .hcf-glass-btn__aura {
-          filter: blur(22px) saturate(1.4);
-        }
-        .hcf-glass-btn:hover .hcf-glass-btn__shine {
-          transform: translateX(130%);
         }
       }
       /* On touch, a press gives the same wipe */
@@ -211,9 +200,6 @@
       .hcf-glass-btn--ring .hcf-glass-btn__frost {
         inset: 2.5px;
         border-radius: calc(var(--hcf-radius) - 2.5px);
-      }
-      @media (hover: hover) {
-        .hcf-glass-btn--ring:hover .hcf-glass-btn__aura { filter: blur(7px) saturate(1.4); }
       }
 
       /* Variant: Molten — thinner frost, richer color at rest */
@@ -273,9 +259,6 @@
         pointer-events: none;
       }
       .hcf-glass-btn--satin .hcf-glass-btn__label { text-shadow: 0 1px 1px rgba(255, 255, 255, 0.45); }
-      @media (hover: hover) {
-        .hcf-glass-btn--satin:hover .hcf-glass-btn__aura { filter: blur(20px) saturate(1.45); }
-      }
 
       /* Texture — Frosted (default) vs Liquid glass: clear, wet, vivid */
       .hcf-glass-btn--liquid { --hcf-frost: 0.22; }
@@ -309,11 +292,6 @@
       }
       .hcf-glass-btn--liquid .hcf-glass-btn__label {
         text-shadow: 0 1px 2px rgba(255, 255, 255, 0.55);
-      }
-      @media (hover: hover) {
-        .hcf-glass-btn--liquid:hover .hcf-glass-btn__aura {
-          filter: blur(16px) saturate(1.55);
-        }
       }
 
       /* Depth — how far the glass steps off the page. Default is Flush. */

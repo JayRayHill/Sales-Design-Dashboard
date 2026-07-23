@@ -110,12 +110,13 @@ flush):
 
 ## Hover behavior
 
-The hover mimics the Canopy rebrand theme's default buttons exactly: Canopy
-CTAs hover via a 104° diagonal color wipe — an oversized two-stop gradient
-whose `background-position` slides over 0.4s ease-out. This button uses the
-identical mechanism and timing, except what wipes away is the frost,
-revealing the moving color current underneath. It reads as family with
-every other button on the site.
+The hover is theme-exact. Canopy CTAs hover with one motion only: a 104°
+diagonal color wipe — an oversized two-stop gradient whose
+`background-position` slides over 0.4s ease-out — no lift, no glow change,
+no sweep. This button does precisely that and nothing else: the frost
+floods away at 104° with the same easing and timing, revealing the moving
+color current. Only the Raised and Domed depth variants add a lift on
+hover, since dimension is their entire purpose.
 
 ## Accessibility & performance
 

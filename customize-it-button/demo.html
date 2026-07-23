@@ -199,7 +199,7 @@
        so the frost wipes away with the same angled sweep as theme buttons */
     background: linear-gradient(
         104deg,
-        rgba(255, 255, 255, calc(var(--hcf-frost) - 0.30)) 60%,
+        rgba(255, 255, 255, calc(var(--hcf-frost) - 0.52)) 60%,
         rgba(255, 255, 255, var(--hcf-frost)) 60%
       )
       no-repeat 100% 100%;
@@ -231,21 +231,10 @@
   }
 
   @media (hover: hover) {
-    .hcf-glass-btn:hover {
-      transform: translateY(-2px);
-      box-shadow:
-        0 2px 4px rgba(22, 19, 16, 0.10),
-        0 18px 38px -16px var(--hcf-glow-a),
-        0 8px 24px -12px var(--hcf-glow-b);
-    }
+    /* Pure Canopy hover: the wipe and nothing else — no lift, no glow
+       change, no sweep. One motion, one timing, same as theme buttons. */
     .hcf-glass-btn:hover .hcf-glass-btn__frost {
       background-position: 0 100%;
-    }
-    .hcf-glass-btn:hover .hcf-glass-btn__aura {
-      filter: blur(22px) saturate(1.4);
-    }
-    .hcf-glass-btn:hover .hcf-glass-btn__shine {
-      transform: translateX(130%);
     }
   }
   /* On touch, a press gives the same wipe */
@@ -261,9 +250,6 @@
   .hcf-glass-btn--ring .hcf-glass-btn__frost {
     inset: 2.5px;
     border-radius: calc(var(--hcf-radius) - 2.5px);
-  }
-  @media (hover: hover) {
-    .hcf-glass-btn--ring:hover .hcf-glass-btn__aura { filter: blur(7px) saturate(1.4); }
   }
 
   /* Variant: Molten — more color at rest, maximum attention */
@@ -323,9 +309,6 @@
     pointer-events: none;
   }
   .hcf-glass-btn--satin .hcf-glass-btn__label { text-shadow: 0 1px 1px rgba(255, 255, 255, 0.45); }
-  @media (hover: hover) {
-    .hcf-glass-btn--satin:hover .hcf-glass-btn__aura { filter: blur(20px) saturate(1.45); }
-  }
 
   /* Texture — Frosted (default) vs Liquid glass: clear, wet, vivid */
   .hcf-glass-btn--liquid { --hcf-frost: 0.22; }
@@ -359,11 +342,6 @@
   }
   .hcf-glass-btn--liquid .hcf-glass-btn__label {
     text-shadow: 0 1px 2px rgba(255, 255, 255, 0.55);
-  }
-  @media (hover: hover) {
-    .hcf-glass-btn--liquid:hover .hcf-glass-btn__aura {
-      filter: blur(16px) saturate(1.55);
-    }
   }
 
   /* Depth — how far the glass steps off the page. Default is Flush. */
@@ -944,7 +922,7 @@
     <h2>Feasibility &amp; build notes</h2>
     <ul>
       <li><strong>Fully feasible, pure CSS.</strong> A rotating conic-gradient of your brand colors is blurred into a liquid wash behind a translucent pane with <code>backdrop-filter</code>. No images, no JavaScript, no apps — one Liquid snippet.</li>
-      <li><strong>Hover matches the rebrand theme's buttons.</strong> Canopy's default CTAs hover with a 104° diagonal color wipe (an oversized gradient sliding over 0.4s). This button uses the identical mechanism — the frost wipes away left-to-right at 104°, same easing, same timing — so it reads as family with every other button on the site.</li>
+      <li><strong>Hover is theme-exact.</strong> Canopy's default CTAs hover with one motion only: a 104° diagonal color wipe (an oversized gradient sliding over 0.4s ease-out) — no lift, no glow, no sweep. This button now does precisely that and nothing else: the frost floods away at 104° with the same easing and timing. Only the Raised and Domed depth options add a lift on top, since dimension is their entire purpose.</li>
       <li><strong>On brand, per the new design system.</strong> The current runs Roasted dark → Roasted → Brew → Iced light → Iced dark, weighted warm with one cool pass. Label is Ink, focus ring is Roasted, radius and shadows follow the token scale. One flag: the guide scopes Iced teal to cold-product sections — here it appears only as a moving accent inside the glass, which reads intentional, but it's a one-line change to drop it if you want to stay strictly warm.</li>
       <li><strong>Why the color lives inside the glass:</strong> on your white product pages a plain frosted blur would be invisible (blurred white is white). Giving the glass its own internal color current is what creates the liquid-glass depth — and it's what lets the color move.</li>
       <li><strong>Browser support:</strong> works in all current Chrome, Safari, Edge and Firefox (with the <code>-webkit-</code> prefix included for Safari). A clean solid-frost fallback is included for anything older.</li>
