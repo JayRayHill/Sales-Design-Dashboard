@@ -34,6 +34,11 @@
     hcf-glass-btn--brew     yellow only
     hcf-glass-btn--iced     blue only
     hcf-glass-btn--sunrise  orange + yellow, no cool tones
+
+  Optional depth — how far the glass steps off the page (default is flush):
+    hcf-glass-btn--raised   layered shadow, top-lit pane, higher hover lift
+    hcf-glass-btn--domed    3D lens: glare cap, beveled edge, deep shadow,
+                            presses down on click
 {%- endcomment -%}
 
 {%- assign customize_handle = product.metafields.custom.customize_it_product -%}
@@ -225,6 +230,73 @@
         --hcf-glow-a: rgba(253, 130, 44, 0.55);
         --hcf-glow-b: rgba(255, 203, 31, 0.40);
         --hcf-tint: rgba(188, 87, 19, 0.25);
+      }
+
+      /* Depth — how far the glass steps off the page. Default is Flush. */
+
+      /* Raised: layered shadow + graded pane, lifts higher on hover */
+      .hcf-glass-btn--raised,
+      .hcf-glass-btn--domed {
+        box-shadow:
+          0 1px 2px rgba(22, 19, 16, 0.10),
+          0 6px 12px -4px rgba(22, 19, 16, 0.12),
+          0 16px 32px -14px var(--hcf-glow-rest);
+      }
+      .hcf-glass-btn--raised .hcf-glass-btn__frost,
+      .hcf-glass-btn--domed .hcf-glass-btn__frost {
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, calc(var(--hcf-frost) + 0.16)),
+          rgba(255, 255, 255, calc(var(--hcf-frost) - 0.10))
+        );
+      }
+
+      /* Domed: curved glare cap, beveled edge, deep stacked shadow */
+      .hcf-glass-btn--domed {
+        box-shadow:
+          0 1px 1px rgba(22, 19, 16, 0.12),
+          0 4px 8px -2px rgba(22, 19, 16, 0.14),
+          0 16px 30px -10px var(--hcf-glow-rest),
+          0 30px 50px -22px rgba(22, 19, 16, 0.28);
+      }
+      .hcf-glass-btn--domed::before {
+        content: "";
+        position: absolute;
+        left: 4%;
+        right: 4%;
+        top: 2px;
+        height: 48%;
+        z-index: 1;
+        border-radius: calc(var(--hcf-radius) - 2px) calc(var(--hcf-radius) - 2px) 50% 50%;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0));
+        pointer-events: none;
+      }
+      .hcf-glass-btn--domed .hcf-glass-btn__frost {
+        box-shadow:
+          inset 0 2px 2px rgba(255, 255, 255, 0.95),
+          inset 0 -3px 6px rgba(22, 19, 16, 0.15),
+          inset 0 -14px 28px -12px var(--hcf-tint);
+      }
+      @media (hover: hover) {
+        .hcf-glass-btn--raised:hover {
+          transform: translateY(-3px);
+          box-shadow:
+            0 2px 4px rgba(22, 19, 16, 0.08),
+            0 10px 18px -6px rgba(22, 19, 16, 0.14),
+            0 24px 44px -16px var(--hcf-glow-a),
+            0 10px 26px -12px var(--hcf-glow-b);
+        }
+        .hcf-glass-btn--domed:hover {
+          transform: translateY(-4px);
+          box-shadow:
+            0 2px 3px rgba(22, 19, 16, 0.10),
+            0 8px 14px -4px rgba(22, 19, 16, 0.16),
+            0 26px 46px -14px var(--hcf-glow-a),
+            0 40px 64px -26px var(--hcf-glow-b);
+        }
+      }
+      .hcf-glass-btn--domed:active {
+        transform: translateY(1px) scale(0.985);
       }
 
       /* Fallback for browsers without backdrop-filter (rare) */

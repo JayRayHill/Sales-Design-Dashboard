@@ -292,6 +292,73 @@
     --hcf-tint: rgba(188, 87, 19, 0.25);
   }
 
+  /* Depth — how far the glass steps off the page. Default is Flush. */
+
+  /* Raised: layered shadow + graded pane, lifts higher on hover */
+  .hcf-glass-btn--raised,
+  .hcf-glass-btn--domed {
+    box-shadow:
+      0 1px 2px rgba(22, 19, 16, 0.10),
+      0 6px 12px -4px rgba(22, 19, 16, 0.12),
+      0 16px 32px -14px var(--hcf-glow-rest);
+  }
+  .hcf-glass-btn--raised .hcf-glass-btn__frost,
+  .hcf-glass-btn--domed .hcf-glass-btn__frost {
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, calc(var(--hcf-frost) + 0.16)),
+      rgba(255, 255, 255, calc(var(--hcf-frost) - 0.10))
+    );
+  }
+
+  /* Domed: curved glare cap, beveled edge, deep stacked shadow */
+  .hcf-glass-btn--domed {
+    box-shadow:
+      0 1px 1px rgba(22, 19, 16, 0.12),
+      0 4px 8px -2px rgba(22, 19, 16, 0.14),
+      0 16px 30px -10px var(--hcf-glow-rest),
+      0 30px 50px -22px rgba(22, 19, 16, 0.28);
+  }
+  .hcf-glass-btn--domed::before {
+    content: "";
+    position: absolute;
+    left: 4%;
+    right: 4%;
+    top: 2px;
+    height: 48%;
+    z-index: 1;
+    border-radius: calc(var(--hcf-radius) - 2px) calc(var(--hcf-radius) - 2px) 50% 50%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0));
+    pointer-events: none;
+  }
+  .hcf-glass-btn--domed .hcf-glass-btn__frost {
+    box-shadow:
+      inset 0 2px 2px rgba(255, 255, 255, 0.95),
+      inset 0 -3px 6px rgba(22, 19, 16, 0.15),
+      inset 0 -14px 28px -12px var(--hcf-tint);
+  }
+  @media (hover: hover) {
+    .hcf-glass-btn--raised:hover {
+      transform: translateY(-3px);
+      box-shadow:
+        0 2px 4px rgba(22, 19, 16, 0.08),
+        0 10px 18px -6px rgba(22, 19, 16, 0.14),
+        0 24px 44px -16px var(--hcf-glow-a),
+        0 10px 26px -12px var(--hcf-glow-b);
+    }
+    .hcf-glass-btn--domed:hover {
+      transform: translateY(-4px);
+      box-shadow:
+        0 2px 3px rgba(22, 19, 16, 0.10),
+        0 8px 14px -4px rgba(22, 19, 16, 0.16),
+        0 26px 46px -14px var(--hcf-glow-a),
+        0 40px 64px -26px var(--hcf-glow-b);
+    }
+  }
+  .hcf-glass-btn--domed:active {
+    transform: translateY(1px) scale(0.985);
+  }
+
   /* Fallback for browsers without backdrop-filter (rare) */
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     .hcf-glass-btn__frost { background: rgba(255, 255, 255, 0.82); }
@@ -528,6 +595,14 @@
           <button class="chip" data-group="palette" data-variant="hcf-glass-btn--sunrise" aria-pressed="false" type="button">Roasted + Brew</button>
         </div>
       </div>
+      <div class="chip-group">
+        <span class="chip-label">Depth</span>
+        <div class="chips">
+          <button class="chip" data-group="depth" data-variant="" aria-pressed="true" type="button">Flush</button>
+          <button class="chip" data-group="depth" data-variant="hcf-glass-btn--raised" aria-pressed="false" type="button">Raised</button>
+          <button class="chip" data-group="depth" data-variant="hcf-glass-btn--domed" aria-pressed="false" type="button">Domed</button>
+        </div>
+      </div>
     </div>
 
     <div class="pdp">
@@ -681,6 +756,55 @@
     </div>
   </section>
 
+  <section>
+    <h2>Depths</h2>
+    <p class="section-sub">How far the glass steps off the page. Shown on Frosted Bloom, Full brand — combines with every finish and color range.</p>
+    <div class="variant-grid">
+      <div class="variant-card">
+        <div class="pane">
+          <div class="hcf-customize-it-container">
+            <a href="#" class="hcf-glass-btn" onclick="return false;">
+              <span class="hcf-glass-btn__aura" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__frost" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__shine" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__label">Customize It</span>
+            </a>
+          </div>
+        </div>
+        <h3>Flush<span class="tag">Default</span></h3>
+        <p>Inlaid into the page like a pane set into the layout — quietest and most modern of the three.</p>
+      </div>
+      <div class="variant-card">
+        <div class="pane">
+          <div class="hcf-customize-it-container">
+            <a href="#" class="hcf-glass-btn hcf-glass-btn--raised" onclick="return false;">
+              <span class="hcf-glass-btn__aura" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__frost" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__shine" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__label">Customize It</span>
+            </a>
+          </div>
+        </div>
+        <h3>Raised</h3>
+        <p>A clear step off the page: layered shadow and a top-lit pane, with a higher lift on hover.</p>
+      </div>
+      <div class="variant-card">
+        <div class="pane">
+          <div class="hcf-customize-it-container">
+            <a href="#" class="hcf-glass-btn hcf-glass-btn--domed" onclick="return false;">
+              <span class="hcf-glass-btn__aura" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__frost" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__shine" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__label">Customize It</span>
+            </a>
+          </div>
+        </div>
+        <h3>Domed</h3>
+        <p>The full 3D lens: a curved glare cap, beveled edge, and deep stacked shadow — and it presses down when you click it.</p>
+      </div>
+    </div>
+  </section>
+
   <section class="notes">
     <h2>Feasibility &amp; build notes</h2>
     <ul>
@@ -699,7 +823,7 @@
   (function () {
     var chips = document.querySelectorAll('.chip');
     var btn = document.getElementById('stage-btn');
-    var picks = { finish: '', palette: '' };
+    var picks = { finish: '', palette: '', depth: '' };
     chips.forEach(function (chip) {
       chip.addEventListener('click', function () {
         var group = chip.dataset.group;
@@ -709,7 +833,7 @@
             c.setAttribute('aria-pressed', c === chip ? 'true' : 'false');
           }
         });
-        btn.className = ('hcf-glass-btn ' + picks.finish + ' ' + picks.palette).replace(/\s+/g, ' ').trim();
+        btn.className = ('hcf-glass-btn ' + picks.finish + ' ' + picks.palette + ' ' + picks.depth).replace(/\s+/g, ' ').trim();
       });
     });
   })();

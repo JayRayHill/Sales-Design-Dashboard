@@ -92,6 +92,13 @@ Color ranges (combine freely with any finish; default is the full brand run):
 
 Each range also retunes the button's glow/shadow colors to match.
 
+Depth (combine freely with any finish and color range; default is flush):
+
+- `hcf-glass-btn--raised` — a clear step off the page: layered shadow,
+  top-lit pane, higher lift on hover
+- `hcf-glass-btn--domed` — full 3D lens: curved glare cap, beveled edge,
+  deep stacked shadow, and a press-down on click
+
 ## Accessibility & performance
 
 - Honors `prefers-reduced-motion` (current freezes, sweep is removed).
