@@ -150,8 +150,7 @@ diagonal color wipe — an oversized two-stop gradient whose
 `background-position` slides with ease-out — no lift, no glow change,
 no sweep. This button does precisely that and nothing else: the frost
 floods away at 104° with the same easing, revealing the moving color
-current. Duration is 0.6s, deliberately a touch slower than the theme's
-0.4s so the glass reveal breathes. Only the Raised and Domed depth variants add a lift on
+current. Duration is 0.4s ease-out, matching the theme's own buttons. Only the Raised and Domed depth variants add a lift on
 hover, since dimension is their entire purpose.
 
 ## Accessibility & performance

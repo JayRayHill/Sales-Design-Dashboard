@@ -60,8 +60,8 @@
 
   Hover behavior matches the Canopy theme's default buttons: a 104deg
   diagonal wipe (background-position slide, ease-out) — here the frost
-  wipes away to reveal the color current. Duration is 0.6s, deliberately
-  a touch slower than the theme's 0.4s.
+  wipes away to reveal the color current. Duration is 0.4s ease-out,
+  matching the theme's own buttons.
 
   Optional speed — how fast the color current turns (default 10s drift;
   or set --hcf-aura-speed to any value):
@@ -193,7 +193,7 @@
         box-shadow:
           inset 0 1px 0 rgba(255, 255, 255, 0.9),
           inset 0 -10px 24px -14px var(--hcf-tint);
-        transition: background-position 0.6s ease-out;
+        transition: background-position 0.4s ease-out; /* matches the theme's .btn wipe timing */
       }
 
       /* Specular sweep across the glass on hover */
