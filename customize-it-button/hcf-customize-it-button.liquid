@@ -19,9 +19,10 @@
        {% render 'hcf-customize-it-button', product: product %}
 
   TUNING (CSS variables on .hcf-glass-btn below)
-    --hcf-aura-speed  rotation speed of the color current (default 14s)
+    --hcf-aura-speed  rotation speed of the color current (default 10s)
     --hcf-frost       frost opacity at rest, 0-1 (default 0.62)
     --hcf-radius      corner radius (default 12px)
+    --hcf-label       label text color (default Roasted dark #BC5713)
 
   Optional variants — add a class next to hcf-glass-btn:
     hcf-glass-btn--ring    color shows as a crisp moving border ring
@@ -49,9 +50,10 @@
       .hcf-customize-it-container { margin: 14px 0; }
 
       .hcf-glass-btn {
-        --hcf-aura-speed: 14s;
+        --hcf-aura-speed: 10s;
         --hcf-frost: 0.62;
         --hcf-radius: 12px;
+        --hcf-label: #BC5713; /* Roasted dark — White bg → Roasted CTA pairing */
 
         position: relative;
         z-index: 0;
@@ -69,7 +71,8 @@
         letter-spacing: 0.2em;
         font-weight: 700;
         font-size: 15px;
-        color: #161310; /* Ink */
+        color: var(--hcf-label);
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
         -webkit-tap-highlight-color: transparent;
         cursor: pointer;
         box-shadow:

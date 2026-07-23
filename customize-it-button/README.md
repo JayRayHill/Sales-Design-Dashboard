@@ -20,7 +20,8 @@ The moving current runs, weighted warm with one cool pass:
 
 Roasted dark `#BC5713` → Roasted `#FD822C` → Brew `#FFCB1F` → Iced light `#9FDCED` → Iced dark `#2A7A8A`
 
-Label is Ink `#161310`, focus ring is Roasted `#FD822C`.
+Label is Roasted dark `#BC5713` (the design system's "White bg → Roasted CTA"
+pairing), focus ring is Roasted `#FD822C`.
 
 Note: the design system scopes Iced teal to cold-product sections. Here it
 appears only as a moving accent inside the glass. To stay strictly warm,
@@ -68,9 +69,10 @@ CSS variables on `.hcf-glass-btn`:
 
 | Variable | Default | Effect |
 | --- | --- | --- |
-| `--hcf-aura-speed` | `14s` | One full rotation of the color current — higher is slower |
+| `--hcf-aura-speed` | `10s` | One full rotation of the color current — higher is slower |
 | `--hcf-frost` | `0.62` | Frost opacity at rest (0–1) — lower shows more color |
 | `--hcf-radius` | `12px` | Corner radius |
+| `--hcf-label` | `#BC5713` | Label text color (Roasted dark) |
 
 Variants (add a class beside `hcf-glass-btn` in the snippet markup):
 

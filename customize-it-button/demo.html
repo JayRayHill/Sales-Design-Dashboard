@@ -122,9 +122,10 @@
   .hcf-customize-it-container { margin: 14px 0; }
 
   .hcf-glass-btn {
-    --hcf-aura-speed: 14s;
+    --hcf-aura-speed: 10s;
     --hcf-frost: 0.62;
     --hcf-radius: 12px;
+    --hcf-label: #BC5713; /* Roasted dark — White bg → Roasted CTA pairing */
 
     position: relative;
     z-index: 0;
@@ -143,7 +144,8 @@
     font-family: var(--sans);
     font-weight: 700;
     font-size: 15px;
-    color: #161310;
+    color: var(--hcf-label);
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
     -webkit-tap-highlight-color: transparent;
     cursor: pointer;
     box-shadow:
@@ -532,10 +534,10 @@
     <h2>Feasibility &amp; build notes</h2>
     <ul>
       <li><strong>Fully feasible, pure CSS.</strong> A rotating conic-gradient of your brand colors is blurred into a liquid wash behind a translucent pane with <code>backdrop-filter</code>. No images, no JavaScript, no apps — one Liquid snippet.</li>
-      <li><strong>On brand, per the new design system.</strong> The current runs Roasted dark → Roasted → Brew → Iced light → Iced dark, weighted warm with one cool pass. Label is Ink, focus ring is Roasted, radius and shadows follow the token scale. One flag: the guide scopes Iced teal to cold-product sections — here it appears only as a moving accent inside the glass, which reads intentional, but it's a one-line change to drop it if you want to stay strictly warm.</li>
+      <li><strong>On brand, per the new design system.</strong> The current runs Roasted dark → Roasted → Brew → Iced light → Iced dark, weighted warm with one cool pass. Label is Roasted dark (the White bg → Roasted CTA pairing), focus ring is Roasted, radius and shadows follow the token scale. One flag: the guide scopes Iced teal to cold-product sections — here it appears only as a moving accent inside the glass, which reads intentional, but it's a one-line change to drop it if you want to stay strictly warm.</li>
       <li><strong>Why the color lives inside the glass:</strong> on your white product pages a plain frosted blur would be invisible (blurred white is white). Giving the glass its own internal color current is what creates the liquid-glass depth — and it's what lets the color move.</li>
       <li><strong>Browser support:</strong> works in all current Chrome, Safari, Edge and Firefox (with the <code>-webkit-</code> prefix included for Safari). A clean solid-frost fallback is included for anything older.</li>
-      <li><strong>Respectful motion:</strong> the rotation is a 14-second drift, not a spin, and it fully honors <code>prefers-reduced-motion</code>. Speed is one variable: <code>--hcf-aura-speed</code>.</li>
+      <li><strong>Respectful motion:</strong> the rotation is a 10-second drift, not a spin, and it fully honors <code>prefers-reduced-motion</code>. Speed is one variable: <code>--hcf-aura-speed</code>.</li>
       <li><strong>Drop-in install:</strong> the production version keeps your existing <code>custom.customize_it_product</code> metafield logic — same trigger, same link target. It replaces the old block in <code>snippets/product-template.liquid</code> with one <code>{&#37; render &#37;}</code> line.</li>
       <li><strong>Small upgrade included:</strong> the old markup nested a <code>&lt;button&gt;</code> inside an <code>&lt;a&gt;</code> (invalid HTML). The new version is a single styled link with a proper aria-label and focus state.</li>
     </ul>
