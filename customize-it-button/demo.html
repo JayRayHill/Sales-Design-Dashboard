@@ -286,6 +286,10 @@
     --hcf-tint: rgba(188, 87, 19, 0.25);
   }
 
+  /* Speed — how fast the color current turns. Default (Drift) is 10s. */
+  .hcf-glass-btn--brisk { --hcf-aura-speed: 7s; }
+  .hcf-glass-btn--lively { --hcf-aura-speed: 4s; }
+
   /* Texture: Satin — halfway between frosted and liquid glass */
   .hcf-glass-btn--satin { --hcf-frost: 0.45; }
   .hcf-glass-btn--satin .hcf-glass-btn__aura { filter: blur(22px) saturate(1.12); }
@@ -660,6 +664,14 @@
         </div>
       </div>
       <div class="chip-group">
+        <span class="chip-label">Speed</span>
+        <div class="chips">
+          <button class="chip" data-group="speed" data-variant="" aria-pressed="true" type="button">Drift · 10s</button>
+          <button class="chip" data-group="speed" data-variant="hcf-glass-btn--brisk" aria-pressed="false" type="button">Brisk · 7s</button>
+          <button class="chip" data-group="speed" data-variant="hcf-glass-btn--lively" aria-pressed="false" type="button">Lively · 4s</button>
+        </div>
+      </div>
+      <div class="chip-group">
         <span class="chip-label">Depth</span>
         <div class="chips">
           <button class="chip" data-group="depth" data-variant="" aria-pressed="true" type="button">Flush</button>
@@ -870,6 +882,55 @@
   </section>
 
   <section>
+    <h2>Speeds</h2>
+    <p class="section-sub">The same current at three tempos, side by side. One CSS variable — any other value works too.</p>
+    <div class="variant-grid">
+      <div class="variant-card">
+        <div class="pane">
+          <div class="hcf-customize-it-container">
+            <a href="#" class="hcf-glass-btn" onclick="return false;">
+              <span class="hcf-glass-btn__aura" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__frost" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__shine" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__label">Customize It</span>
+            </a>
+          </div>
+        </div>
+        <h3>Drift · 10s<span class="tag">Default</span></h3>
+        <p>Calm and ambient — you notice it without it asking you to.</p>
+      </div>
+      <div class="variant-card">
+        <div class="pane">
+          <div class="hcf-customize-it-container">
+            <a href="#" class="hcf-glass-btn hcf-glass-btn--brisk" onclick="return false;">
+              <span class="hcf-glass-btn__aura" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__frost" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__shine" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__label">Customize It</span>
+            </a>
+          </div>
+        </div>
+        <h3>Brisk · 7s</h3>
+        <p>Noticeably livelier while still reading as a drift, not a spin.</p>
+      </div>
+      <div class="variant-card">
+        <div class="pane">
+          <div class="hcf-customize-it-container">
+            <a href="#" class="hcf-glass-btn hcf-glass-btn--lively" onclick="return false;">
+              <span class="hcf-glass-btn__aura" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__frost" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__shine" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__label">Customize It</span>
+            </a>
+          </div>
+        </div>
+        <h3>Lively · 4s</h3>
+        <p>High energy — hard to miss. Best paired with the quieter Frosted texture so it doesn't overwhelm.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
     <h2>Depths</h2>
     <p class="section-sub">How far the glass steps off the page. Shown on Frosted Bloom, Full brand — combines with every finish and color range.</p>
     <div class="variant-grid">
@@ -937,7 +998,7 @@
   (function () {
     var chips = document.querySelectorAll('.chip');
     var btn = document.getElementById('stage-btn');
-    var picks = { finish: '', palette: '', texture: '', depth: '' };
+    var picks = { finish: '', palette: '', texture: '', speed: '', depth: '' };
     chips.forEach(function (chip) {
       chip.addEventListener('click', function () {
         var group = chip.dataset.group;
@@ -947,7 +1008,7 @@
             c.setAttribute('aria-pressed', c === chip ? 'true' : 'false');
           }
         });
-        btn.className = ('hcf-glass-btn ' + picks.finish + ' ' + picks.palette + ' ' + picks.texture + ' ' + picks.depth).replace(/\s+/g, ' ').trim();
+        btn.className = ('hcf-glass-btn ' + picks.finish + ' ' + picks.palette + ' ' + picks.texture + ' ' + picks.speed + ' ' + picks.depth).replace(/\s+/g, ' ').trim();
       });
     });
   })();

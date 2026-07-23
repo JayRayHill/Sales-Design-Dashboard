@@ -100,8 +100,13 @@ Texture (default is frosted):
 - `hcf-glass-btn--liquid` — clear "liquid glass": a thin wet film instead of
   the milky frost, vivid color underneath, and a permanent gloss highlight
 
-Depth (combine freely with any finish, color range, and texture; default is
-flush):
+Speed (default is a 10s drift; `--hcf-aura-speed` accepts any value):
+
+- `hcf-glass-btn--brisk` — 7s rotation, noticeably livelier
+- `hcf-glass-btn--lively` — 4s rotation, high energy
+
+Depth (combine freely with any finish, color range, texture, and speed;
+default is flush):
 
 - `hcf-glass-btn--raised` — a clear step off the page: layered shadow,
   top-lit pane, higher lift on hover

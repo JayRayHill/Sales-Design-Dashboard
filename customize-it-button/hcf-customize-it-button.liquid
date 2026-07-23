@@ -46,6 +46,11 @@
   wipes away to reveal the color current. Duration is 0.6s, deliberately
   a touch slower than the theme's 0.4s.
 
+  Optional speed — how fast the color current turns (default 10s drift;
+  or set --hcf-aura-speed to any value):
+    hcf-glass-btn--brisk    7s rotation
+    hcf-glass-btn--lively   4s rotation
+
   Optional depth — how far the glass steps off the page (default is flush):
     hcf-glass-btn--raised   layered shadow, top-lit pane, higher hover lift
     hcf-glass-btn--domed    3D lens: glare cap, beveled edge, deep shadow,
@@ -236,6 +241,10 @@
         --hcf-glow-b: rgba(255, 203, 31, 0.40);
         --hcf-tint: rgba(188, 87, 19, 0.25);
       }
+
+      /* Speed — how fast the color current turns. Default (Drift) is 10s. */
+      .hcf-glass-btn--brisk { --hcf-aura-speed: 7s; }
+      .hcf-glass-btn--lively { --hcf-aura-speed: 4s; }
 
       /* Texture: Satin — halfway between frosted and liquid glass */
       .hcf-glass-btn--satin { --hcf-frost: 0.45; }
