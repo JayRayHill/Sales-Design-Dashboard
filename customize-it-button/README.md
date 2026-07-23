@@ -112,10 +112,11 @@ flush):
 
 The hover is theme-exact. Canopy CTAs hover with one motion only: a 104°
 diagonal color wipe — an oversized two-stop gradient whose
-`background-position` slides over 0.4s ease-out — no lift, no glow change,
+`background-position` slides with ease-out — no lift, no glow change,
 no sweep. This button does precisely that and nothing else: the frost
-floods away at 104° with the same easing and timing, revealing the moving
-color current. Only the Raised and Domed depth variants add a lift on
+floods away at 104° with the same easing, revealing the moving color
+current. Duration is 0.6s, deliberately a touch slower than the theme's
+0.4s so the glass reveal breathes. Only the Raised and Domed depth variants add a lift on
 hover, since dimension is their entire purpose.
 
 ## Accessibility & performance

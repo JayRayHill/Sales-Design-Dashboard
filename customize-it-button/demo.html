@@ -210,7 +210,7 @@
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.9),
       inset 0 -10px 24px -14px var(--hcf-tint);
-    transition: background-position 0.4s ease-out;
+    transition: background-position 0.6s ease-out;
   }
 
   /* Specular sweep across the glass on hover */
@@ -922,7 +922,7 @@
     <h2>Feasibility &amp; build notes</h2>
     <ul>
       <li><strong>Fully feasible, pure CSS.</strong> A rotating conic-gradient of your brand colors is blurred into a liquid wash behind a translucent pane with <code>backdrop-filter</code>. No images, no JavaScript, no apps — one Liquid snippet.</li>
-      <li><strong>Hover is theme-exact.</strong> Canopy's default CTAs hover with one motion only: a 104° diagonal color wipe (an oversized gradient sliding over 0.4s ease-out) — no lift, no glow, no sweep. This button now does precisely that and nothing else: the frost floods away at 104° with the same easing and timing. Only the Raised and Domed depth options add a lift on top, since dimension is their entire purpose.</li>
+      <li><strong>Hover is theme-exact.</strong> Canopy's default CTAs hover with one motion only: a 104° diagonal color wipe (an oversized gradient sliding with ease-out) — no lift, no glow, no sweep. This button does precisely that and nothing else: the frost floods away at 104° with the same easing, eased to 0.6s (vs the theme's 0.4s) so the glass reveal breathes a touch more. Only the Raised and Domed depth options add a lift on top, since dimension is their entire purpose.</li>
       <li><strong>On brand, per the new design system.</strong> The current runs Roasted dark → Roasted → Brew → Iced light → Iced dark, weighted warm with one cool pass. Label is Ink, focus ring is Roasted, radius and shadows follow the token scale. One flag: the guide scopes Iced teal to cold-product sections — here it appears only as a moving accent inside the glass, which reads intentional, but it's a one-line change to drop it if you want to stay strictly warm.</li>
       <li><strong>Why the color lives inside the glass:</strong> on your white product pages a plain frosted blur would be invisible (blurred white is white). Giving the glass its own internal color current is what creates the liquid-glass depth — and it's what lets the color move.</li>
       <li><strong>Browser support:</strong> works in all current Chrome, Safari, Edge and Firefox (with the <code>-webkit-</code> prefix included for Safari). A clean solid-frost fallback is included for anything older.</li>
