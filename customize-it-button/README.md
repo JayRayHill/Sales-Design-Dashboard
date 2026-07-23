@@ -21,7 +21,9 @@ cool pass:
 
 Roasted dark `#BC5713` → Roasted `#FD822C` → Brew `#FFCB1F` → Iced light `#9FDCED` → Iced dark `#2A7A8A`
 
-Label is Ink `#161310`, focus ring is Roasted `#FD822C`.
+Label is "Design Online" (UNIQ's proven label for this designer), Ink
+`#161310` text, focus ring Roasted `#FD822C`. The label is a single line in
+the snippet — swap freely, or A/B test against "Customize It".
 
 Four alternate color ranges ship as one-class swaps (see Tuning below):
 Roasted only, Brew only, Iced only, and Roasted + Brew ("sunrise", no cool
@@ -29,41 +31,39 @@ tones). Note: the design system scopes Iced teal to cold-product sections —
 the full-brand and Iced-only ranges use it only as a moving accent inside
 the glass; pick Roasted, Brew, or Roasted + Brew to stay strictly warm.
 
-## Install (Main Theme 2026)
+## What this is
 
-1. Shopify admin → Online Store → Themes → **Edit code** on the live theme.
-2. Under **Snippets**, click *Add a new snippet*, name it
-   `hcf-customize-it-button`, and paste the contents of
-   `hcf-customize-it-button.liquid`.
-3. Open `snippets/product-template.liquid` and search for
-   `hcf-customize-it-container` (it sits inside the `buy_buttons` block case).
-   Replace the whole old block:
+This ports UNIQ Supply's "Design Online" designer button onto Hot Cup
+Factory as an upgraded glass CTA. On UNIQ, the button reads the
+`customizer.type` / `customizer.size` product metafields and links to an
+online designer at `/pages/custom-designer?brand=…&type=…&size=…`. This
+snippet reproduces that flow with the glass styling.
 
-   ```liquid
-   {% assign metafield_value = product.metafields.custom.customize_it_product %}
-   {% if metafield_value %}
-     {% assign related_product = all_products[metafield_value] %}
-     {% if related_product %}
-       <div class="hcf-customize-it-container">
-         <a href="{{ related_product.url }}">
-           <button type="button" class="hcf-customize-it-btn">Customize It</button>
-         </a>
-       </div>
-     {% endif %}
-   {% endif %}
-   ```
+## Prerequisites on Hot Cup Factory
 
-   with:
+The button only appears when these are in place on HCF:
+
+1. **Metafield definitions** `customizer.type` and `customizer.size`, defined
+   and populated per product (mirror UNIQ's value set — e.g. `single-wall`,
+   `16oz`). The button renders only when **both** are set on a product.
+2. **A `/pages/custom-designer` page** wired to the designer app for HCF.
+3. **The correct brand token** — UNIQ passes `brand=uniq`. Set `cz_brand` in
+   the snippet to whatever the designer registers HCF as (defaults to `hcf`;
+   **confirm before going live**).
+
+## Install (HCF draft theme)
+
+1. Shopify admin → Online Store → Themes → **Edit code** on the draft theme.
+2. Under **Snippets**, *Add a new snippet* named `hcf-customize-it-button`,
+   and paste in `hcf-customize-it-button.liquid`.
+3. In the product template, at the spot where the CTA should appear, add:
 
    ```liquid
    {% render 'hcf-customize-it-button', product: product %}
    ```
 
-4. Preview a product that has the `custom.customize_it_product` metafield set
-   (the trigger logic is unchanged — same metafield, same link target).
-5. Optional cleanup: remove the old `.hcf-customize-it-btn` /
-   `.hcf-customize-it-container` CSS from the theme stylesheet if it lives
-   there.
+4. Preview a product that has both `customizer.type` and `customizer.size`
+   set. If the button doesn't show, one of the two metafields is empty.
 
 ## Tuning
 

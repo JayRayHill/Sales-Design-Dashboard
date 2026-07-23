@@ -6,17 +6,27 @@
   press the frost thins and the color surges through, with a specular sweep.
   Pure CSS — no images, no JS, no apps.
 
-  Trigger logic is unchanged from the old button: renders only when the
-  product has the custom.customize_it_product metafield, and links to that
-  product.
+  Ports UNIQ Supply's "Design Online" designer button onto Hot Cup Factory
+  as an upgraded glass CTA. Renders only when the product has BOTH
+  customizer.type and customizer.size metafields set, and links to the
+  online designer at /pages/custom-designer with brand/type/size as query
+  params — same gating and URL shape as UNIQ's button.
 
-  INSTALL
+  PREREQUISITES on Hot Cup Factory (needed for the button to appear/work):
+    - Metafield definitions customizer.type and customizer.size, populated
+      per product (e.g. single-wall / 16oz — see UNIQ for the value set).
+    - A /pages/custom-designer page wired to the designer app for HCF.
+    - The correct brand token (cz_brand below) for HCF in that app.
+
+  INSTALL (on the HCF draft theme)
   1. Save this file as snippets/hcf-customize-it-button.liquid
-  2. In snippets/product-template.liquid, find the old block (search for
-     "hcf-customize-it-container", inside the buy_buttons case) and replace
-     the whole {% if metafield_value %} ... {% endif %} block with:
+  2. In the product template, where you want the button, add:
 
        {% render 'hcf-customize-it-button', product: product %}
+
+  LABEL: set below (default "Design Online" — the store's live label for
+  this designer). It's a single line; swap freely, or A/B test against
+  "Customize It".
 
   TUNING (CSS variables on .hcf-glass-btn below)
     --hcf-aura-speed  rotation speed of the color current (default 10s)
@@ -57,20 +67,25 @@
                             presses down on click
 {%- endcomment -%}
 
-{%- assign customize_handle = product.metafields.custom.customize_it_product -%}
-{%- if customize_handle -%}
-  {%- assign related_product = all_products[customize_handle] -%}
-  {%- if related_product -%}
+{%- assign cz_type = product.metafields.customizer.type -%}
+{%- assign cz_size = product.metafields.customizer.size -%}
+{%- comment -%}
+  Brand token the /pages/custom-designer app expects. UNIQ Supply's version
+  uses 'uniq'; set this to whatever the designer registers Hot Cup Factory as.
+  CONFIRM this value before going live — a wrong token breaks the designer link.
+{%- endcomment -%}
+{%- assign cz_brand = 'hcf' -%}
+{%- if cz_type != blank and cz_size != blank -%}
     <div class="hcf-customize-it-container">
       <a
-        href="{{ related_product.url }}"
+        href="/pages/custom-designer?brand={{ cz_brand }}&type={{ cz_type | url_encode }}&size={{ cz_size | url_encode }}"
         class="hcf-glass-btn"
-        aria-label="Customize {{ product.title | escape }}"
+        aria-label="Design your custom {{ product.title | escape }} online"
       >
         <span class="hcf-glass-btn__aura" aria-hidden="true"></span>
         <span class="hcf-glass-btn__frost" aria-hidden="true"></span>
         <span class="hcf-glass-btn__shine" aria-hidden="true"></span>
-        <span class="hcf-glass-btn__label">Customize It</span>
+        <span class="hcf-glass-btn__label">Design Online</span>
       </a>
     </div>
 
@@ -389,5 +404,4 @@
         .hcf-glass-btn__frost { transition: none; }
       }
     {% endstyle %}
-  {%- endif -%}
 {%- endif -%}
