@@ -164,6 +164,9 @@ Speed (default is a 10s drift; `--hcf-aura-speed` accepts any value):
 - `hcf-glass-btn--brisk` — 7s rotation, noticeably livelier
 - `hcf-glass-btn--lively` — 4s rotation, high energy
 
+The button is **flat by default** — no drop shadow — matching the theme's
+own buttons. The Raised and Domed depth options below deliberately add one.
+
 Depth (combine freely with any finish, color range, texture, and speed;
 default is flush):
 
