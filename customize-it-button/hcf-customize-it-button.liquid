@@ -58,6 +58,10 @@
     hcf-glass-btn--liquid   clear "liquid glass": thin wet film, vivid
                             color, permanent gloss highlight
 
+  Optional label color (default ink):
+    hcf-glass-btn--white-label  white text + a soft dark scrim behind it for
+                                contrast over the light glass
+
   Hover behavior matches the Canopy theme's default buttons: a 104deg
   diagonal wipe (background-position slide, ease-out) — here the frost
   wipes away to reveal the color current. Duration is 0.4s ease-out,
@@ -239,6 +243,20 @@
       /* Variant: Molten — thinner frost, richer color at rest */
       .hcf-glass-btn--molten { --hcf-frost: 0.40; }
       .hcf-glass-btn--molten .hcf-glass-btn__aura { filter: blur(24px) saturate(1.25); }
+
+      /* Optional white label — a soft dark scrim keeps white legible over the
+         light glass, and stays constant so the rotating color can't wash it out */
+      .hcf-glass-btn--white-label { --hcf-label: #ffffff; }
+      .hcf-glass-btn--white-label .hcf-glass-btn__label { text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45); }
+      .hcf-glass-btn--white-label::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 1; /* above the glass, below the label (z-index 2) */
+        border-radius: inherit;
+        background: radial-gradient(ellipse 55% 75% at 50% 50%, rgba(0, 0, 0, 0.34), transparent 72%);
+        pointer-events: none;
+      }
 
       /* Color ranges — swap the current's palette with one class */
       .hcf-glass-btn--roasted {

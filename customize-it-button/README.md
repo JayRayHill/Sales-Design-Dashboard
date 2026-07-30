@@ -130,6 +130,13 @@ Texture (default is frosted):
 - `hcf-glass-btn--liquid` — clear "liquid glass": a thin wet film instead of
   the milky frost, vivid color underneath, and a permanent gloss highlight
 
+Label color (default is ink):
+
+- `hcf-glass-btn--white-label` — white text with a soft dark scrim behind it.
+  Needed because the glass is light: white alone fails contrast and washes
+  out as the color rotates; the constant scrim keeps it readable while
+  leaving the ring and edges bright.
+
 Speed (default is a 10s drift; `--hcf-aura-speed` accepts any value):
 
 - `hcf-glass-btn--brisk` — 7s rotation, noticeably livelier

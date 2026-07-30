@@ -257,6 +257,19 @@
   .hcf-glass-btn--molten { --hcf-frost: 0.40; }
   .hcf-glass-btn--molten .hcf-glass-btn__aura { filter: blur(24px) saturate(1.25); }
 
+  /* Optional white label — soft dark scrim keeps white legible over light glass */
+  .hcf-glass-btn--white-label { --hcf-label: #ffffff; }
+  .hcf-glass-btn--white-label .hcf-glass-btn__label { text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45); }
+  .hcf-glass-btn--white-label::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    background: radial-gradient(ellipse 55% 75% at 50% 50%, rgba(0, 0, 0, 0.34), transparent 72%);
+    pointer-events: none;
+  }
+
   /* Color ranges — swap the current's palette with one class */
   .hcf-glass-btn--roasted {
     --hcf-c1: #BC5713; --hcf-c2: #FD822C; --hcf-c3: #FFCCA9; --hcf-c4: #FD822C; --hcf-c5: #BC5713;
@@ -673,6 +686,13 @@
         </div>
       </div>
       <div class="chip-group">
+        <span class="chip-label">Label</span>
+        <div class="chips">
+          <button class="chip" data-group="label" data-variant="" aria-pressed="true" type="button">Ink</button>
+          <button class="chip" data-group="label" data-variant="hcf-glass-btn--white-label" aria-pressed="false" type="button">White</button>
+        </div>
+      </div>
+      <div class="chip-group">
         <span class="chip-label">Depth</span>
         <div class="chips">
           <button class="chip" data-group="depth" data-variant="" aria-pressed="true" type="button">Flush</button>
@@ -999,7 +1019,7 @@
   (function () {
     var chips = document.querySelectorAll('.chip');
     var btn = document.getElementById('stage-btn');
-    var picks = { finish: 'hcf-glass-btn--ring', palette: '', texture: '', speed: 'hcf-glass-btn--brisk', depth: '' };
+    var picks = { finish: 'hcf-glass-btn--ring', palette: '', texture: '', speed: 'hcf-glass-btn--brisk', label: '', depth: '' };
     chips.forEach(function (chip) {
       chip.addEventListener('click', function () {
         var group = chip.dataset.group;
@@ -1009,7 +1029,7 @@
             c.setAttribute('aria-pressed', c === chip ? 'true' : 'false');
           }
         });
-        btn.className = ('hcf-glass-btn ' + picks.finish + ' ' + picks.palette + ' ' + picks.texture + ' ' + picks.speed + ' ' + picks.depth).replace(/\s+/g, ' ').trim();
+        btn.className = ('hcf-glass-btn ' + picks.finish + ' ' + picks.palette + ' ' + picks.texture + ' ' + picks.speed + ' ' + picks.label + ' ' + picks.depth).replace(/\s+/g, ' ').trim();
       });
     });
   })();
