@@ -88,9 +88,12 @@
     hcf-glass-btn--domed    3D lens: glare cap, beveled edge, deep shadow,
                             presses down on click
 
-  Optional hover (default reveals color by thinning the frost):
-    hcf-glass-btn--sheen    holds the frost and sweeps a light gloss across
-                            instead — closer to the site's own buttons
+  Optional hover — intensity ladder, lightest to boldest (default is the
+  full color reveal):
+    hcf-glass-btn--sheen         gloss sweep only, frost held steady
+    hcf-glass-btn--reveal-soft   frost lightens a little as it sweeps
+    hcf-glass-btn--reveal-mid    frost lightens about halfway
+    (no class)                   frost clears fully — full color reveal
 {%- endcomment -%}
 
 {%- assign cz_type = product.metafields.customizer.type -%}
@@ -201,7 +204,7 @@
            so the frost wipes away with the same angled sweep as theme buttons */
         background: linear-gradient(
             104deg,
-            rgba(255, 255, 255, calc(var(--hcf-frost) - 0.52)) 60%,
+            rgba(255, 255, 255, calc(var(--hcf-frost) - var(--hcf-reveal, 0.52))) 60%,
             rgba(255, 255, 255, var(--hcf-frost)) 60%
           )
           no-repeat 100% 100%;
@@ -245,6 +248,15 @@
       }
       .hcf-glass-btn:active { transform: translateY(0) scale(0.99); }
       .hcf-glass-btn:focus-visible { outline: 2px solid #FD822C; outline-offset: 3px; }
+
+      /* Hover intensity ladder. The wipe motion is identical in each; only
+         how far the frost lightens changes:
+           --sheen        gloss only, frost held (lightest)
+           --reveal-soft  frost lightens a little
+           --reveal-mid   frost lightens about halfway
+           (default)      frost clears to full color reveal (boldest) */
+      .hcf-glass-btn--reveal-soft { --hcf-reveal: 0.16; }
+      .hcf-glass-btn--reveal-mid { --hcf-reveal: 0.32; }
 
       /* Hover option: a light gloss sheen sweeps across instead of the
          frost-reveal wipe. The frost holds still and a soft highlight glints

@@ -169,12 +169,19 @@ default is flush):
 - `hcf-glass-btn--domed` — full 3D lens: curved glare cap, beveled edge,
   deep stacked shadow, and a press-down on click
 
-Hover style (default is the color-reveal wipe):
+Hover intensity — a four-step ladder, lightest to boldest. The 104° sweep
+motion and timing are identical in every step; only how far the frost
+lightens changes (via `--hcf-reveal`):
 
-- `hcf-glass-btn--sheen` — holds the frost steady and sweeps a soft light
-  gloss diagonally across the glass instead of revealing the color beneath.
-  Closer in feel to the site's own buttons; the color current still drifts
-  underneath, it just isn't unveiled on hover.
+| Step | Class | Effect |
+| --- | --- | --- |
+| 1 | `hcf-glass-btn--sheen` | Gloss sweep only — frost held steady, no color revealed |
+| 2 | `hcf-glass-btn--reveal-soft` | Frost lightens a little (`--hcf-reveal: 0.16`) |
+| 3 | `hcf-glass-btn--reveal-mid` | Frost lightens about halfway (`0.32`) |
+| 4 | *(no class)* | Frost clears fully — full color reveal (`0.52`, default) |
+
+The color current keeps drifting underneath at every step. For a value
+between steps, set `--hcf-reveal` to any number instead of using a class.
 
 ## Hover behavior
 
