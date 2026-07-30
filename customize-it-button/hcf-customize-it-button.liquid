@@ -64,9 +64,14 @@
 
   Alternate look (V2) — standalone, replaces the frost treatments:
     hcf-glass-btn--v2  "Ember Glass": deep jewel-tone moving surface with
-                       white text and a glass gloss (no scrim). Pair only
-                       with a color/speed/depth class, not --ring/--satin/
-                       --liquid/--molten.
+                       white text and a glass gloss (no scrim). Flat, no
+                       shadow. Pair with a V2 color option + speed, not
+                       --ring/--satin/--liquid/--molten.
+
+  V2 color options (use with --v2; all stay dark enough for white text):
+    hcf-glass-btn--v2-roasted  warm — deep orange / clay / amber
+    hcf-glass-btn--v2-iced     cool — deep teal / blue
+    (no class = the default warm+cool mix)
 
   Hover behavior matches the Canopy theme's default buttons: a 104deg
   diagonal wipe (background-position slide, ease-out) — here the frost
@@ -282,8 +287,22 @@
         --hcf-c5: #1E5A67; /* deep teal */
         --hcf-glow-rest: rgba(30, 90, 103, 0.45);
         background: #8F3D12; /* deep base showing under the soft edges of the current */
+        box-shadow: none;    /* V2 is flat, matching the theme buttons */
       }
       .hcf-glass-btn--v2 .hcf-glass-btn__aura { filter: blur(20px) saturate(1.35); }
+
+      /* V2 color options — every stop stays dark so white text holds up.
+         Use alongside --v2; no class = the default warm+cool mix. */
+      .hcf-glass-btn--v2.hcf-glass-btn--v2-roasted {
+        --hcf-c1: #BC5713; --hcf-c2: #9A3F14; --hcf-c3: #C56A1E; --hcf-c4: #7A3410; --hcf-c5: #A64E25;
+        --hcf-glow-rest: rgba(166, 78, 37, 0.45);
+        background: #7A3410;
+      }
+      .hcf-glass-btn--v2.hcf-glass-btn--v2-iced {
+        --hcf-c1: #2A7A8A; --hcf-c2: #1E5A67; --hcf-c3: #35899A; --hcf-c4: #184A56; --hcf-c5: #2A7A8A;
+        --hcf-glow-rest: rgba(30, 90, 103, 0.45);
+        background: #16414B;
+      }
       /* frost becomes a clear glass gloss (top sheen), not a milky pane */
       .hcf-glass-btn--v2 .hcf-glass-btn__frost {
         background: linear-gradient(180deg, rgba(255, 255, 255, 0.30), rgba(255, 255, 255, 0.05) 42%, rgba(255, 255, 255, 0) 58%, rgba(255, 255, 255, 0.08));

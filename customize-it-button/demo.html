@@ -276,8 +276,19 @@
     --hcf-c1: #BC5713; --hcf-c2: #9A3F14; --hcf-c3: #B5651F; --hcf-c4: #2A7A8A; --hcf-c5: #1E5A67;
     --hcf-glow-rest: rgba(30, 90, 103, 0.45);
     background: #8F3D12;
+    box-shadow: none; /* V2 is flat */
   }
   .hcf-glass-btn--v2 .hcf-glass-btn__aura { filter: blur(20px) saturate(1.35); }
+  .hcf-glass-btn--v2.hcf-glass-btn--v2-roasted {
+    --hcf-c1: #BC5713; --hcf-c2: #9A3F14; --hcf-c3: #C56A1E; --hcf-c4: #7A3410; --hcf-c5: #A64E25;
+    --hcf-glow-rest: rgba(166, 78, 37, 0.45);
+    background: #7A3410;
+  }
+  .hcf-glass-btn--v2.hcf-glass-btn--v2-iced {
+    --hcf-c1: #2A7A8A; --hcf-c2: #1E5A67; --hcf-c3: #35899A; --hcf-c4: #184A56; --hcf-c5: #2A7A8A;
+    --hcf-glow-rest: rgba(30, 90, 103, 0.45);
+    background: #16414B;
+  }
   .hcf-glass-btn--v2 .hcf-glass-btn__frost {
     background: linear-gradient(180deg, rgba(255,255,255,0.30), rgba(255,255,255,0.05) 42%, rgba(255,255,255,0) 58%, rgba(255,255,255,0.08));
     -webkit-backdrop-filter: none;
@@ -770,7 +781,52 @@
         <div class="pdp__atc">Add to Cart</div>
       </div>
     </div>
-    <p class="stage-note">V2 is a standalone look — it replaces the frost/ring treatments rather than layering on them.</p>
+    <p class="stage-note">V2 is a standalone look — it replaces the frost/ring treatments rather than layering on them. Flat, no shadow.</p>
+
+    <div class="variant-grid" style="margin-top: 28px;">
+      <div class="variant-card">
+        <div class="pane">
+          <div class="hcf-customize-it-container">
+            <a href="#" class="hcf-glass-btn hcf-glass-btn--v2 hcf-glass-btn--brisk" onclick="return false;">
+              <span class="hcf-glass-btn__aura" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__frost" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__shine" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__label">Design Online</span>
+            </a>
+          </div>
+        </div>
+        <h3>Mixed<span class="tag">Default</span></h3>
+        <p>Warm into cool — roasted orange through deep teal.</p>
+      </div>
+      <div class="variant-card">
+        <div class="pane">
+          <div class="hcf-customize-it-container">
+            <a href="#" class="hcf-glass-btn hcf-glass-btn--v2 hcf-glass-btn--v2-roasted hcf-glass-btn--brisk" onclick="return false;">
+              <span class="hcf-glass-btn__aura" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__frost" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__shine" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__label">Design Online</span>
+            </a>
+          </div>
+        </div>
+        <h3>Roasted (warm)</h3>
+        <p>All deep orange, clay, and amber — no cool tones.</p>
+      </div>
+      <div class="variant-card">
+        <div class="pane">
+          <div class="hcf-customize-it-container">
+            <a href="#" class="hcf-glass-btn hcf-glass-btn--v2 hcf-glass-btn--v2-iced hcf-glass-btn--brisk" onclick="return false;">
+              <span class="hcf-glass-btn__aura" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__frost" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__shine" aria-hidden="true"></span>
+              <span class="hcf-glass-btn__label">Design Online</span>
+            </a>
+          </div>
+        </div>
+        <h3>Iced (cool)</h3>
+        <p>All deep teal and blue — coolest of the three.</p>
+      </div>
+    </div>
   </section>
 
   <section>

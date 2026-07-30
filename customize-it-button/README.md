@@ -145,8 +145,16 @@ deep teal), topped with a clear glass gloss. Because the surface is dark and
 the light stops (Brew yellow, Iced light) are dropped from the rotation,
 **white text reads naturally with no scrim or darkening overlay**. It's a
 standalone look: use it in place of the frost treatments (don't combine with
-`--ring`/`--satin`/`--liquid`/`--molten`), but it still pairs with the
-color-range, speed, and depth classes. Hover brightens the current.
+`--ring`/`--satin`/`--liquid`/`--molten`), but it still pairs with the speed
+and depth classes. It's **flat (no shadow)** to match the theme buttons.
+Hover brightens the current.
+
+V2 color options (use with `--v2`; all stay dark enough for white text — the
+bright Brew yellow is intentionally excluded because white can't sit on it):
+
+- `hcf-glass-btn--v2-roasted` — warm: deep orange / clay / amber
+- `hcf-glass-btn--v2-iced` — cool: deep teal / blue
+- no class = the default warm+cool mix
 
 Speed (default is a 10s drift; `--hcf-aura-speed` accepts any value):
 
