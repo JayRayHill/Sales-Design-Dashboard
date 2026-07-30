@@ -87,6 +87,10 @@
     hcf-glass-btn--raised   layered shadow, top-lit pane, higher hover lift
     hcf-glass-btn--domed    3D lens: glare cap, beveled edge, deep shadow,
                             presses down on click
+
+  Optional hover (default reveals color by thinning the frost):
+    hcf-glass-btn--sheen    holds the frost and sweeps a light gloss across
+                            instead — closer to the site's own buttons
 {%- endcomment -%}
 
 {%- assign cz_type = product.metafields.customizer.type -%}
@@ -241,6 +245,19 @@
       }
       .hcf-glass-btn:active { transform: translateY(0) scale(0.99); }
       .hcf-glass-btn:focus-visible { outline: 2px solid #FD822C; outline-offset: 3px; }
+
+      /* Hover option: a light gloss sheen sweeps across instead of the
+         frost-reveal wipe. The frost holds still and a soft highlight glints
+         over the glass (diagonal, echoing the site's hover feel). */
+      .hcf-glass-btn--sheen .hcf-glass-btn__shine {
+        background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.55) 50%, transparent 62%);
+        transition: transform 0.6s ease;
+      }
+      .hcf-glass-btn--sheen:active .hcf-glass-btn__frost { background-position: 100% 100%; }
+      @media (hover: hover) {
+        .hcf-glass-btn--sheen:hover .hcf-glass-btn__frost { background-position: 100% 100%; } /* hold the frost — no color reveal */
+        .hcf-glass-btn--sheen:hover .hcf-glass-btn__shine { transform: translateX(130%); }
+      }
 
       /* Variant: Prism Ring — color shows as a crisp moving border ring */
       .hcf-glass-btn--ring { --hcf-frost: 0.9; }

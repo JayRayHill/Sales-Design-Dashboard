@@ -169,6 +169,13 @@ default is flush):
 - `hcf-glass-btn--domed` — full 3D lens: curved glare cap, beveled edge,
   deep stacked shadow, and a press-down on click
 
+Hover style (default is the color-reveal wipe):
+
+- `hcf-glass-btn--sheen` — holds the frost steady and sweeps a soft light
+  gloss diagonally across the glass instead of revealing the color beneath.
+  Closer in feel to the site's own buttons; the color current still drifts
+  underneath, it just isn't unveiled on hover.
+
 ## Hover behavior
 
 The hover is theme-exact. Canopy CTAs hover with one motion only: a 104°
