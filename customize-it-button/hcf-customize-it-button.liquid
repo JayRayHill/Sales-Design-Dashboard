@@ -62,6 +62,12 @@
     hcf-glass-btn--white-label  white text + a soft dark scrim behind it for
                                 contrast over the light glass
 
+  Alternate look (V2) — standalone, replaces the frost treatments:
+    hcf-glass-btn--v2  "Ember Glass": deep jewel-tone moving surface with
+                       white text and a glass gloss (no scrim). Pair only
+                       with a color/speed/depth class, not --ring/--satin/
+                       --liquid/--molten.
+
   Hover behavior matches the Canopy theme's default buttons: a 104deg
   diagonal wipe (background-position slide, ease-out) — here the frost
   wipes away to reveal the color current. Duration is 0.4s ease-out,
@@ -256,6 +262,39 @@
         border-radius: inherit;
         background: radial-gradient(ellipse 55% 75% at 50% 50%, rgba(0, 0, 0, 0.34), transparent 72%);
         pointer-events: none;
+      }
+
+      /* ============================================================
+         V2 — "Ember Glass": color-forward instead of frost-forward.
+         A deep jewel-tone brand current fills the surface so WHITE text
+         reads naturally (no scrim, no darkening overlay). The pale yellow
+         and light-blue stops are dropped from the rotation so contrast
+         never dips. Standalone look — don't combine with --ring/--satin/
+         --liquid/--molten (those are frost treatments V2 replaces).
+         ============================================================ */
+      .hcf-glass-btn--v2 {
+        --hcf-label: #ffffff;
+        /* darker brand ramp — every stop stays dark enough for white text */
+        --hcf-c1: #BC5713; /* roasted dark */
+        --hcf-c2: #9A3F14; /* deep clay */
+        --hcf-c3: #B5651F; /* burnt amber */
+        --hcf-c4: #2A7A8A; /* iced dark */
+        --hcf-c5: #1E5A67; /* deep teal */
+        --hcf-glow-rest: rgba(30, 90, 103, 0.45);
+        background: #8F3D12; /* deep base showing under the soft edges of the current */
+      }
+      .hcf-glass-btn--v2 .hcf-glass-btn__aura { filter: blur(20px) saturate(1.35); }
+      /* frost becomes a clear glass gloss (top sheen), not a milky pane */
+      .hcf-glass-btn--v2 .hcf-glass-btn__frost {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.30), rgba(255, 255, 255, 0.05) 42%, rgba(255, 255, 255, 0) 58%, rgba(255, 255, 255, 0.08));
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+      }
+      .hcf-glass-btn--v2 .hcf-glass-btn__label { text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28); }
+      @media (hover: hover) {
+        .hcf-glass-btn--v2:hover .hcf-glass-btn__aura { filter: blur(18px) saturate(1.5) brightness(1.12); }
       }
 
       /* Color ranges — swap the current's palette with one class */

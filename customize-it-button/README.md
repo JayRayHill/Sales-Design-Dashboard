@@ -137,6 +137,17 @@ Label color (default is ink):
   out as the color rotates; the constant scrim keeps it readable while
   leaving the ring and edges bright.
 
+Alternate look — V2 "Ember Glass" (`hcf-glass-btn--v2`):
+
+A color-forward take instead of frost-forward. The surface is a deep
+jewel-tone brand current (roasted dark → clay → burnt amber → iced dark →
+deep teal), topped with a clear glass gloss. Because the surface is dark and
+the light stops (Brew yellow, Iced light) are dropped from the rotation,
+**white text reads naturally with no scrim or darkening overlay**. It's a
+standalone look: use it in place of the frost treatments (don't combine with
+`--ring`/`--satin`/`--liquid`/`--molten`), but it still pairs with the
+color-range, speed, and depth classes. Hover brightens the current.
+
 Speed (default is a 10s drift; `--hcf-aura-speed` accepts any value):
 
 - `hcf-glass-btn--brisk` — 7s rotation, noticeably livelier

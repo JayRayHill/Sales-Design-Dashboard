@@ -270,6 +270,26 @@
     pointer-events: none;
   }
 
+  /* ===== V2 — "Ember Glass": color-forward, white text, no scrim ===== */
+  .hcf-glass-btn--v2 {
+    --hcf-label: #ffffff;
+    --hcf-c1: #BC5713; --hcf-c2: #9A3F14; --hcf-c3: #B5651F; --hcf-c4: #2A7A8A; --hcf-c5: #1E5A67;
+    --hcf-glow-rest: rgba(30, 90, 103, 0.45);
+    background: #8F3D12;
+  }
+  .hcf-glass-btn--v2 .hcf-glass-btn__aura { filter: blur(20px) saturate(1.35); }
+  .hcf-glass-btn--v2 .hcf-glass-btn__frost {
+    background: linear-gradient(180deg, rgba(255,255,255,0.30), rgba(255,255,255,0.05) 42%, rgba(255,255,255,0) 58%, rgba(255,255,255,0.08));
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border: 1px solid rgba(255,255,255,0.28);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.45);
+  }
+  .hcf-glass-btn--v2 .hcf-glass-btn__label { text-shadow: 0 1px 2px rgba(0,0,0,0.28); }
+  @media (hover: hover) {
+    .hcf-glass-btn--v2:hover .hcf-glass-btn__aura { filter: blur(18px) saturate(1.5) brightness(1.12); }
+  }
+
   /* Color ranges — swap the current's palette with one class */
   .hcf-glass-btn--roasted {
     --hcf-c1: #BC5713; --hcf-c2: #FD822C; --hcf-c3: #FFCCA9; --hcf-c4: #FD822C; --hcf-c5: #BC5713;
@@ -725,6 +745,32 @@
       </div>
     </div>
     <p class="stage-note">The color current always drifts slowly — that's the attention hook on mobile, where there's no hover. Press the button on a phone and the color surges the same way hover does on desktop.</p>
+  </section>
+
+  <section>
+    <h2>Version 2 — “Ember Glass” (white text, no scrim)</h2>
+    <p class="section-sub">Same DNA — moving brand color, glass gloss, theme-matched box — but the surface flips to a deep jewel tone so <strong>white text reads naturally</strong> with no darkening overlay behind it. The pale-yellow and light-blue stops are dropped from the rotation so contrast never dips. Hover (or tap) to see it brighten.</p>
+    <div class="pdp">
+      <p class="pdp__title">UNIQ 8 oz Double Wall White Paper Coffee Cups&nbsp;–&nbsp;500/Case</p>
+      <p class="pdp__price">$99.99</p>
+      <div class="pdp__option">
+        <span class="pdp__radio" aria-hidden="true"></span>
+        <span><strong>One-Time Purchase</strong><span>$99.99</span></span>
+      </div>
+      <div class="hcf-customize-it-container">
+        <a href="#" class="hcf-glass-btn hcf-glass-btn--v2 hcf-glass-btn--brisk" onclick="return false;">
+          <span class="hcf-glass-btn__aura" aria-hidden="true"></span>
+          <span class="hcf-glass-btn__frost" aria-hidden="true"></span>
+          <span class="hcf-glass-btn__shine" aria-hidden="true"></span>
+          <span class="hcf-glass-btn__label">Design Online</span>
+        </a>
+      </div>
+      <div class="pdp__cart" aria-hidden="true">
+        <div class="pdp__qty"><span>−</span><span>1</span><span>+</span></div>
+        <div class="pdp__atc">Add to Cart</div>
+      </div>
+    </div>
+    <p class="stage-note">V2 is a standalone look — it replaces the frost/ring treatments rather than layering on them.</p>
   </section>
 
   <section>
