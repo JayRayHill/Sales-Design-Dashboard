@@ -92,6 +92,7 @@
   full color reveal):
     hcf-glass-btn--sheen         gloss sweep only, frost held steady
     hcf-glass-btn--reveal-soft   frost lightens a little as it sweeps
+    hcf-glass-btn--reveal-lift   a step more than soft
     hcf-glass-btn--reveal-mid    frost lightens about halfway
     (no class)                   frost clears fully — full color reveal
 {%- endcomment -%}
@@ -253,9 +254,11 @@
          how far the frost lightens changes:
            --sheen        gloss only, frost held (lightest)
            --reveal-soft  frost lightens a little
+           --reveal-lift  a step more than soft
            --reveal-mid   frost lightens about halfway
            (default)      frost clears to full color reveal (boldest) */
       .hcf-glass-btn--reveal-soft { --hcf-reveal: 0.16; }
+      .hcf-glass-btn--reveal-lift { --hcf-reveal: 0.24; }
       .hcf-glass-btn--reveal-mid { --hcf-reveal: 0.32; }
 
       /* Hover option: a light gloss sheen sweeps across instead of the

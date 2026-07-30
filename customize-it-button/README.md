@@ -177,8 +177,9 @@ lightens changes (via `--hcf-reveal`):
 | --- | --- | --- |
 | 1 | `hcf-glass-btn--sheen` | Gloss sweep only — frost held steady, no color revealed |
 | 2 | `hcf-glass-btn--reveal-soft` | Frost lightens a little (`--hcf-reveal: 0.16`) |
-| 3 | `hcf-glass-btn--reveal-mid` | Frost lightens about halfway (`0.32`) |
-| 4 | *(no class)* | Frost clears fully — full color reveal (`0.52`, default) |
+| 3 | `hcf-glass-btn--reveal-lift` | A step more than soft (`0.24`) |
+| 4 | `hcf-glass-btn--reveal-mid` | Frost lightens about halfway (`0.32`) |
+| 5 | *(no class)* | Frost clears fully — full color reveal (`0.52`, default) |
 
 The color current keeps drifting underneath at every step. For a value
 between steps, set `--hcf-reveal` to any number instead of using a class.
