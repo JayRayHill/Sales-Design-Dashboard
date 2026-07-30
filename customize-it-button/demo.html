@@ -709,11 +709,11 @@
       <div class="chip-group">
         <span class="chip-label">Color</span>
         <div class="chips">
-          <button class="chip" data-group="palette" data-variant="" aria-pressed="true" type="button">Full brand</button>
+          <button class="chip" data-group="palette" data-variant="" aria-pressed="false" type="button">Full brand</button>
           <button class="chip" data-group="palette" data-variant="hcf-glass-btn--roasted" aria-pressed="false" type="button">Roasted only</button>
           <button class="chip" data-group="palette" data-variant="hcf-glass-btn--brew" aria-pressed="false" type="button">Brew only</button>
           <button class="chip" data-group="palette" data-variant="hcf-glass-btn--iced" aria-pressed="false" type="button">Iced only</button>
-          <button class="chip" data-group="palette" data-variant="hcf-glass-btn--sunrise" aria-pressed="false" type="button">Roasted + Brew</button>
+          <button class="chip" data-group="palette" data-variant="hcf-glass-btn--sunrise" aria-pressed="true" type="button">Roasted + Brew</button>
         </div>
       </div>
       <div class="chip-group">
@@ -768,7 +768,7 @@
       </div>
 
       <div class="hcf-customize-it-container">
-        <a href="#" class="hcf-glass-btn hcf-glass-btn--ring hcf-glass-btn--brisk hcf-glass-btn--reveal-mid" id="stage-btn" onclick="return false;">
+        <a href="#" class="hcf-glass-btn hcf-glass-btn--ring hcf-glass-btn--sunrise hcf-glass-btn--brisk hcf-glass-btn--reveal-mid" id="stage-btn" onclick="return false;">
           <span class="hcf-glass-btn__aura" aria-hidden="true"></span>
           <span class="hcf-glass-btn__frost" aria-hidden="true"></span>
           <span class="hcf-glass-btn__shine" aria-hidden="true"></span>
@@ -1147,7 +1147,7 @@
   (function () {
     var chips = document.querySelectorAll('.chip');
     var btn = document.getElementById('stage-btn');
-    var picks = { finish: 'hcf-glass-btn--ring', palette: '', texture: '', speed: 'hcf-glass-btn--brisk', hover: 'hcf-glass-btn--reveal-mid', label: '', depth: '' };
+    var picks = { finish: 'hcf-glass-btn--ring', palette: 'hcf-glass-btn--sunrise', texture: '', speed: 'hcf-glass-btn--brisk', hover: 'hcf-glass-btn--reveal-mid', label: '', depth: '' };
     chips.forEach(function (chip) {
       chip.addEventListener('click', function () {
         var group = chip.dataset.group;

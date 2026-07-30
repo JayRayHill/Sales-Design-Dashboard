@@ -44,11 +44,13 @@ color, because the glass surface is light and needs dark text for contrast
 — that's part of the custom look, not a structural setting. Font weight is
 700, matching the theme's `.btn`.
 
-**Shipped configuration:** Prism Ring finish + Brisk 7s speed +
-Half-lighten hover, with full-brand color, frosted texture, and flush depth
-(the defaults). Those three classes
-(`hcf-glass-btn--ring hcf-glass-btn--brisk hcf-glass-btn--reveal-mid`) are
-already on the `<a>` in the snippet — change them to restyle.
+**Shipped configuration:** Prism Ring finish + Roasted&nbsp;+&nbsp;Brew
+color + Brisk 7s speed + Half-lighten hover, with frosted texture and flush
+depth (the defaults). Those four classes
+(`hcf-glass-btn--ring hcf-glass-btn--sunrise hcf-glass-btn--brisk hcf-glass-btn--reveal-mid`)
+are already on the `<a>` in the snippet — change them to restyle. The
+Roasted+Brew range keeps Iced teal out, which also matches the design
+system's rule about scoping Iced to cold-product sections.
 
 Four alternate color ranges ship as one-class swaps (see Tuning below):
 Roasted only, Brew only, Iced only, and Roasted + Brew ("sunrise", no cool
